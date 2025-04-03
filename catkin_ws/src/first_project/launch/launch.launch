@@ -1,0 +1,18 @@
+<launch>
+    <!-- Publisher node -->
+    <node pkg="first_project" type="odom_pub" name="odometer" output="screen" />
+    <node pkg="first_project" type="gps_pub" name="gps_odometer" output="screen" />
+    <node pkg="first_project" type="sector_time_pub" name="sector_time" output="screen" />
+
+    <!-- Subscriber node -->
+    <node pkg="first_project" type="odom_sub" name="odometer" output="screen" />
+    <node pkg="first_project" type="gps_sub" name="gps_odometer" output="screen" />
+    <node pkg="first_project" type="sector_time_sub" name="sector_time" output="screen" />
+
+    <!-- Static Transform for GPS Odom (Assuming a fixed GPS frame) -->
+    <node pkg="tf2_ros" type="static_transform_publisher" name="gps_to_vehicle_tf"
+          args="0 0 0 0 0 0 gps vehicle" />
+
+    <!-- Start RViz with preloaded configuration -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find first_project)/config/RVIZ_CONFIG.rviz"/>
+</launch>
