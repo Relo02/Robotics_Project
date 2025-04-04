@@ -20,6 +20,12 @@ catkin_package(
   CATKIN_DEPENDS roscpp nav_msgs geometry_msgs tf2_ros
 )
 
+# Declare parameter configuration files
+generate_dynamic_reconfigure_options(
+  cfg/gps_odometer_params.cfg
+  
+)
+
 # Include directories
 include_directories(
   ${catkin_INCLUDE_DIRS}

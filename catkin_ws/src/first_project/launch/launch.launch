@@ -1,4 +1,10 @@
 <launch>
+
+    <!-- Set global GPS starting location --> <!-- TO DO!! GET THE REFRENCE VALUES FROM .BAG FILE!!-->
+    <param name="/lat_r"  type="double" value="37.7749" />
+    <param name="/lon_r" type="double" value="-122.4194" />
+    <param name="/alt_r"  type="double" value="10.0" />
+
     <!-- Publisher node -->
     <node pkg="first_project" type="odom_pub" name="odometer" output="screen" />
     <node pkg="first_project" type="gps_pub" name="gps_odometer" output="screen" />
