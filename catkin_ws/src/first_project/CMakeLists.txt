@@ -7,6 +7,7 @@ find_package(catkin REQUIRED COMPONENTS
   nav_msgs
   geometry_msgs
   tf2_ros
+  sensor_msgs
 )
 
 # Declare the catkin package
