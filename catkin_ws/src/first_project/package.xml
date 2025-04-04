@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>first_project</name>
+  <version>0.0.1</version>
+  <description>The first_project package</description>
+
+  <maintainer email="ortolore@gmail.com">Your Name</maintainer>
+  <license>MIT</license>
+
+  <!-- Build dependencies -->
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_depend>nav_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>eigen</build_depend>
+
+  <!-- Run-time dependencies -->
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>eigen</exec_depend>
+
+  <!-- Exported information -->
+  <export>
+    <build_type>cmake</build_type>
+  </export>
+</package>

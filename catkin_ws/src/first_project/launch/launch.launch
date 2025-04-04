@@ -9,9 +9,10 @@
     <node pkg="first_project" type="gps_sub" name="gps_odometer" output="screen" />
     <node pkg="first_project" type="sector_time_sub" name="sector_time" output="screen" />
 
-    <!-- Static Transform for GPS Odom (Assuming a fixed GPS frame) -->
-    <node pkg="tf2_ros" type="static_transform_publisher" name="gps_to_vehicle_tf"
-          args="0 0 0 0 0 0 gps vehicle" />
+    <!-- GPS world Reference frame global parameters (starting coordinates) -->
+    <param name="lat_r" value="45.630645048865034" />
+    <param name="lon_r" value="9.292019293116049" />
+    <param name="alt_r" value="236.65267429420547" />
 
     <!-- Start RViz with preloaded configuration -->
     <node pkg="rviz" type="rviz" name="rviz" args="-d $(find first_project)/config/RVIZ_CONFIG.rviz"/>
