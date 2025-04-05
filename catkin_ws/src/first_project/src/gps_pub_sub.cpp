@@ -33,6 +33,22 @@ class GPS_pub_sub {
         // Transform to store the transform messages
         tf::Transform transform;
 
+        // Variables for ENU coordinates
+        Eigen::Vector3d enu_position;
+        double heading_angle = 0.0;
+        Eigen::Vector3d prev_enu_position = Eigen::Vector3d::Zero();
+
+        // Variables for denu coordinates
+        Eigen::Vector3d denu_position;
+
+        // Previous filtered value for smoothing
+        Eigen::Vector3d prev_filtered_value = Eigen::Vector3d::Zero();
+        double prev_heading_angle = 0.0;
+        double alpha = 0.1; // Smoothing factor (0 < alpha < 1)
+
+        // Timer for periodic tasks
+        double prev_time = 0.0;
+
     public:
         // Constructor: sets up subscribers, publisher, and timer
         GPS_pub_sub() {
@@ -77,13 +93,15 @@ class GPS_pub_sub {
         void gps_odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
             // Process the odometry message here
 
+            double curr_time = ros::Time::now().toSec();
+
             // Converting gps data from LLA to ECEF
             Eigen::Vector3d ecef_position;
-            double lat = gps_poseMSG_.latitude;
-            double lon = gps_poseMSG_.longitude;
-            double alt = gps_poseMSG_.altitude;
+            double lat = gps_poseMSG_.latitude * M_PI / 180.0;
+            double lon = gps_poseMSG_.longitude * M_PI / 180.0;
+            double alt = gps_poseMSG_.altitude * 0.001; // Convert from mm to m
             double a = 6378137.0; // WGS-84 semi-major axis
-            double b = b=6356752;
+            double b = 6356752;
             double e2 = 1 - b*b / (a*a); // Square of eccentricity
             double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
             ecef_position(0) = (N + alt) * cos(lat) * cos(lon);
@@ -91,14 +109,13 @@ class GPS_pub_sub {
             ecef_position(2) = (N * (1 - e2) + alt) * sin(lat);
 
             // ##Converting gps data from ECEF to ENU
-            Eigen::Vector3d enu_position;
-            double lat_ref = reference_latitude;
-            double lon_ref = reference_longitude;
-            double alt_ref = reference_altitude;
+            double lat_ref = reference_latitude * M_PI / 180.0;
+            double lon_ref = reference_longitude * M_PI / 180.0;
+            double alt_ref = reference_altitude * 0.001; // Convert from mm to m
             Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(lat_ref, lon_ref, alt_ref);
-            double dlat = lat - lat_ref;
+            /*double dlat = lat - lat_ref;
             double dlon = lon - lon_ref;
-            double dalt = alt - alt_ref;
+            double dalt = alt - alt_ref;*/
 
             // Calculate the ENU coordinates
             Eigen::Matrix3d R;
@@ -108,11 +125,60 @@ class GPS_pub_sub {
             
             enu_position = R * (ecef_position - ecef_ref_position);
 
+            // Estimating the heading angle
+            denu_position = enu_position - prev_enu_position;
+            heading_angle = atan2(denu_position(1), denu_position(0));
+
+            // Smoothing the heading angle
+            smoothing_algorithm();
+
+            // Publish the odometry message
+            nav_msgs::Odometry odom;
+            odom.header.stamp = ros::Time::now();
+            odom.header.frame_id = "gps";
+            odom.child_frame_id = "gps_odom";
+            odom.pose.pose.position.x = enu_position(0);
+            odom.pose.pose.position.y = enu_position(1);
+            odom.pose.pose.position.z = enu_position(2);
+            odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(heading_angle);
+
+            // computing the velocity
+            if ((curr_time - prev_time).toSec() > 0) {
+                odom.twist.twist.linear.x = (enu_position(0) - prev_enu_position(0)) / (curr_time - prev_time).toSec();
+                odom.twist.twist.linear.y = (enu_position(1) - prev_enu_position(1)) / (curr_time - prev_time).toSec();
+                odom.twist.twist.linear.z = (enu_position(2) - prev_enu_position(2)) / (curr_time - prev_time).toSec();
+                odom.twist.twist.angular.x = 0;
+                odom.twist.twist.angular.y = 0;
+                odom.twist.twist.angular.z = (heading_angle - prev_heading_angle) / (curr_time - prev_time).toSec();
+                odom_pub_.publish(odom);
+            } else {
+                odom.twist.twist.linear.x = 0;
+                odom.twist.twist.linear.y = 0;
+                odom.twist.twist.linear.z = 0;
+                odom.twist.twist.angular.x = 0;
+                odom.twist.twist.angular.y = 0;
+                odom.twist.twist.angular.z = 0;
+                odom_pub_.publish(odom);
+            }
+
             // Publish the tf transform from gps odometry to gps frame
             transform.setOrigin(tf::Vector3(enu_position(0), enu_position(1), enu_position(2)));
             q.setRPY(0, 0, 0); // Assuming no rotation for simplicity
             transform.setRotation(q);
             br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "gps", "gps_odom"));
+
+            prev_enu_position = enu_position;
+            prev_time = curr_time;
+            prev_filtered_value = enu_position;
+            prev_heading_angle = heading_angle;
+        }
+
+        void smoothing_algorithm() {
+
+            // Implementing a moving avarage
+            // to smooth the GPS data before publishing
+            enu_position = alpha * prev_filtered_value + (1 - alpha) * enu_position;
+            heading_angle = alpha * prev_heading_angle + (1 - alpha) * heading_angle;
         }
 };
 
