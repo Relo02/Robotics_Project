@@ -22,7 +22,7 @@ catkin_package(
 
 # Declare parameter configuration files
 generate_dynamic_reconfigure_options(
-  cfg/gps_odometer_params.cfg
+  config/gps_odometer_params.cfg
   
 )
 
@@ -32,9 +32,9 @@ include_directories(
 )
 
 # Add executable for each node
-add_executable(odometer src/odom_pub.cpp src/odom_sub.cpp)
-add_executable(gps_odometer src/gps_pub.cpp src/gps_sub.cpp)
-add_executable(sector_time src/sector_time_pub.cpp src/sector_time_sub.cpp)
+add_executable(odometer src/odom_pub_sub.cpp)
+add_executable(gps_odometer src/gps_pub_sub.cpp)
+add_executable(sector_time src/sector_time_pub_sub.cpp)
 
 # Link the executables with the required libraries
 target_link_libraries(odometer
