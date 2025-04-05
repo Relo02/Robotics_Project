@@ -4,6 +4,7 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "nav_msgs/Odometry.h"
 #include <Eigen/Dense>
+#include <cmath>
 
 class GPS_pub_sub {
     private:

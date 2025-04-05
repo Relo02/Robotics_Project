@@ -4,6 +4,9 @@ project(first_project)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
+find_package(cmath REQUIRED)
+include_directories(${cmath_INCLUDE_DIR})
+
 # Find required packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -23,7 +26,7 @@ catkin_package(
 # Declare parameter configuration files
 generate_dynamic_reconfigure_options(
   config/gps_odometer_params.cfg
-  
+  config/odometer_params.cfg
 )
 
 # Include directories
