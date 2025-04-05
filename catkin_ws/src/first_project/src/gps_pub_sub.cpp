@@ -4,6 +4,7 @@
 #include "sensor_msgs/NavSatFix.h"
 #include "nav_msgs/Odometry.h"
 #include <Eigen/Dense>
+#include <tf/transform_broadcaster.h>
 #include <cmath>
 
 class GPS_pub_sub {
@@ -22,6 +23,15 @@ class GPS_pub_sub {
 
         // Global string parameter
         double reference_latitude, reference_longitude, reference_altitude;
+
+        // Transform broadcaster
+        tf::TransformBroadcaster br;
+
+        // Transform and quaternion as class members to reuse them in each callback
+        tf::Quaternion q;
+
+        // Transform to store the transform messages
+        tf::Transform transform;
 
     public:
         // Constructor: sets up subscribers, publisher, and timer
@@ -97,15 +107,13 @@ class GPS_pub_sub {
                  cos(lat_ref) * cos(lon_ref), cos(lat_ref) * sin(lon_ref), sin(lat_ref);
             
             enu_position = R * (ecef_position - ecef_ref_position);
-        }
 
-        // Timer callback function: publishes messages periodically
-        /*void timerCallback(const ros::TimerEvent&) {
-            // Publish the latest messages from both subscribers
-            rechatter_pub_.publish(chatterMsg_);
-            rechatter_pub_.publish(chatter2Msg_);
-            ROS_INFO("Timer callback executed: messages published.");
-        }*/
+            // Publish the tf transform from gps odometry to gps frame
+            transform.setOrigin(tf::Vector3(enu_position(0), enu_position(1), enu_position(2)));
+            q.setRPY(0, 0, 0); // Assuming no rotation for simplicity
+            transform.setRotation(q);
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "gps", "gps_odom"));
+        }
 };
 
 int main(int argc, char **argv) {

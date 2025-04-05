@@ -4,7 +4,7 @@
   <version>0.0.1</version>
   <description>The first_project package</description>
 
-  <maintainer email="ortolore@gmail.com">Your Name</maintainer>
+  <maintainer email="ortolore@gmail.com">Lorenzo Ortolani</maintainer>
   <license>MIT</license>
 
   <!-- Build dependencies -->
