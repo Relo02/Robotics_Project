@@ -55,21 +55,21 @@ class GPS_pub_sub {
 
             // Calling the global reference latitude
             if (nh_.getParam("/lat_r", reference_latitude)) {
-                ROS_INFO("Global parameter: %s", reference_latitude);
+                ROS_INFO("Global parameter: %d", reference_latitude);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
             }
 
             // Calling the global reference longitude
             if (nh_.getParam("/lon_r", reference_longitude)) {
-                ROS_INFO("Global parameter: %s", reference_longitude);
+                ROS_INFO("Global parameter: %d", reference_longitude);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
             }
 
             // Calling the global reference altitude
             if (nh_.getParam("/alt_r", reference_altitude)) {
-                ROS_INFO("Global parameter: %s", reference_altitude);
+                ROS_INFO("Global parameter: %d", reference_altitude);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
             }
@@ -143,13 +143,13 @@ class GPS_pub_sub {
             odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(heading_angle);
 
             // computing the velocity
-            if ((curr_time - prev_time).toSec() > 0) {
-                odom.twist.twist.linear.x = (enu_position(0) - prev_enu_position(0)) / (curr_time - prev_time).toSec();
-                odom.twist.twist.linear.y = (enu_position(1) - prev_enu_position(1)) / (curr_time - prev_time).toSec();
-                odom.twist.twist.linear.z = (enu_position(2) - prev_enu_position(2)) / (curr_time - prev_time).toSec();
+            if (curr_time - prev_time > 0) {
+                odom.twist.twist.linear.x = (enu_position(0) - prev_enu_position(0)) / (curr_time - prev_time);
+                odom.twist.twist.linear.y = (enu_position(1) - prev_enu_position(1)) / (curr_time - prev_time);
+                odom.twist.twist.linear.z = (enu_position(2) - prev_enu_position(2)) / (curr_time - prev_time);
                 odom.twist.twist.angular.x = 0;
                 odom.twist.twist.angular.y = 0;
-                odom.twist.twist.angular.z = (heading_angle - prev_heading_angle) / (curr_time - prev_time).toSec();
+                odom.twist.twist.angular.z = (heading_angle - prev_heading_angle) / (curr_time - prev_time);
                 odom_pub_.publish(odom);
             } else {
                 odom.twist.twist.linear.x = 0;

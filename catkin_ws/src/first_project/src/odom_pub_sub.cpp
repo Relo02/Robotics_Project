@@ -90,12 +90,12 @@ class OdomPubSub {
             //Compute new x,y,theta
             if (ome<-0.1 && ome<0.1){
                 // call runge kutta approximation if w is near zero
-                thetak_1 = theta_k+ome*dT;
+                thetak_1 = thetak+ome*dT;
                 xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
                 yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
             }
             else{
-                thetak_1 = theta_k+ome*dT;
+                thetak_1 = thetak+ome*dT;
                 xk_1 = xk+V_f/ome*(sin(thetak_1)-sin(thetak));
                 yk_1 = yk-V_f/ome*(cos(thetak_1)-cos(thetak));
             }
@@ -110,14 +110,14 @@ class OdomPubSub {
             //Adding velocity and omega optionally 
             // odomMSG_.twist.twist.linear.x = V_f;
             // odomMSG_.twist.twist.angular.z = ome;
-            odom_pub_.publish(odom); 
+            odom_pub_.publish(odomMSG_); 
 
 
             //Transform to Vehicle frame via tf
-            q.setRPY(xk_1, yk_1, thetak_1);
+            q_.setRPY(xk_1, yk_1, thetak_1);
             transform.setRotation(q);
             // Publish the updated transform
-            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "vehicle"));
+            br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "vehicle"));
 
             //last = current loop
             last_time = current_time;
