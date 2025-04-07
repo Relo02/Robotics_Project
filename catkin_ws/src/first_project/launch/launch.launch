@@ -1,15 +1,16 @@
 <launch>
 
     <!-- Publisher nodes -->
-    <node pkg="first_project" type="odom_pub_sub" name="odometer" output="screen" />
-    <node pkg="first_project" type="gps_pub_sub" name="gps_odometer" output="screen" />
-    <node pkg="first_project" type="sector_time_pub" name="sector_time" output="screen" />
+    <node pkg="first_project" type="odometer" name="odometer" output="screen">
+        <param name="steering_factor" value="32"/>
+        <param name="d" value="1.765"/>
+        <param name="b" value="1.3"/>
+    </node>
 
-    <!-- Subscriber node 
-    <node pkg="first_project" type="odom_sub" name="odometer" output="screen" />
-    <node pkg="first_project" type="gps_sub" name="gps_odometer" output="screen" />
-    <node pkg="first_project" type="sector_time_sub" name="sector_time" output="screen" />-->
+    <node pkg="first_project" type="gps_odometer" name="gps_odometer" output="screen" />
+    <node pkg="first_project" type="sector_time" name="sector_time" output="screen" />
 
+ 
     <!-- GPS world Reference frame global parameters (starting coordinates) -->
     <param name="lat_r" value="45.618932386592405" />
     <param name="lon_r" value="9.281178887031235" />
@@ -19,13 +20,6 @@
     <param name="Y_r" value="721788.001807" />
     <param name="Z_r" value="4536504.058037" />
 
-    <!-- Odometer private parameters-->
-    <node pkg="first_project" type = "odom_pub_sub" name="odom_pub_sub" output="screen">
-        <!-- Private Parameters -->
-        <param name="steering_factor" value = "32"/>
-        <param name="d" value = "1.765" />
-        <param name="b" value = "1.3" />
-    </node>
     
 
 
