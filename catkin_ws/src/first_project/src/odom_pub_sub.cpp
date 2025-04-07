@@ -8,7 +8,7 @@ class OdomPubSub {
     private:
         //ROS node handle
         ros::NodeHandle nh_;
-        ros::NodeHandle private_nh("~");    
+        ros::NodeHandle private_nh;    
 
         //Create transform broadcaster 
         tf::TransformBroadcaster br_;
@@ -26,6 +26,11 @@ class OdomPubSub {
         geometry_msgs::PointStamped speedsteerMSG_;
         // Publishing odometry
         nav_msgs::Odometry odomMSG_;
+
+        //Declare parameter values
+        double steering_factor_; // Steering factor
+        double d_; // Distance between wheels
+        double b_; // Real wheel baseline
 
 
         // Intialize speedsteer message variables
@@ -46,17 +51,17 @@ class OdomPubSub {
         double thetak_1; // Current theta value 
     public:
         // Constructor: sets up subscriber and publishers
-        OdomPubSub() : nh_(), private_nh_("~"){
+        OdomPubSub() : nh_(), private_nh("~"){
 
 
-            if (!private_nh_.getParam("steering_factor", steering_factor_)) {
-                ROS_Warning("Missing required Steering Factor parameter, using default value");
+            if (!private_nh.getParam("steering_factor", steering_factor_)!=false) {
+                ROS_WARN("Missing required Steering Factor parameter, using default value");
             }
-            if (!private_nh_.getParam("d", d_)) {
-                ROS_WARNING("Missing required Distance Between Wheels parameter, using default value");
+            if (!private_nh.getParam("d", d_)) {
+                ROS_WARN("Missing required Distance Between Wheels parameter, using default value");
             }
             
-            if (!private_nh_.getParam("b", b_)) {
+            if (!private_nh.getParam("b", b_)) {
                 ROS_ERROR("Missing required Real Wheel Baseline parameter, using default value");
             }
             // Subscribe to "/speedsteer" topic 
@@ -70,11 +75,11 @@ class OdomPubSub {
 
         //Call back function 
         void speedsteerCallback(const geometry_msgs::PointStamped::ConstPtr& msg){
-            odomMSG_ = *msg;
+            speedsteerMSG_ = *msg;
             //Extract speed, steer input,and time from msg
-            a = oomMSG_.point.x;
-            V = odomMSG_.point.y;
-            ros::Time current_time = msg.header.stamp;
+            a = speedsteerMSG_.point.x;
+            V = speedsteerMSG_.point.y;
+            current_time = speedsteerMSG_.header.stamp;
 
             //Compute steering angle
             alpha = a*steering_factor_* M_PI / 180.0;
@@ -112,22 +117,19 @@ class OdomPubSub {
             // odomMSG_.twist.twist.angular.z = ome;
             odom_pub_.publish(odomMSG_); 
 
-
+            //Update the transform's origin with the new pose
+            transform_.setOrigin(tf::Vector3(xk_1, yk_1, 0.0));
             //Transform to Vehicle frame via tf
-            q_.setRPY(xk_1, yk_1, thetak_1);
-            transform.setRotation(q);
+            q_.setRPY(0,0, thetak_1);
+            transform_.setRotation(q_);
             // Publish the updated transform
-            br_.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "odom", "vehicle"));
+            br_.sendTransform(tf::StampedTransform(transform_, current_time, "odom", "vehicle"));
 
             //last = current loop
             last_time = current_time;
             thetak = thetak_1;
             xk = xk_1;
             yk = yk_1;
-
-
-
-
         }
 
 

@@ -12,7 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   nav_msgs
   geometry_msgs
-  tf2_ros
+  tf
   sensor_msgs
   dynamic_reconfigure
 )
@@ -27,7 +27,7 @@ generate_dynamic_reconfigure_options(
 catkin_package(
   #INCLUDE_DIRS include
   #LIBRARIES first_project
-  #CATKIN_DEPENDS roscpp nav_msgs geometry_msgs tf2_ros
+  #CATKIN_DEPENDS roscpp nav_msgs geometry_msgs tf
 )
 
 # Include directories
