@@ -53,16 +53,31 @@ class OdomPubSub {
         // Constructor: sets up subscriber and publishers
         OdomPubSub() : nh_(), private_nh("~"){
 
+            if (private_nh.getParam("steering_factor", steering_factor_))
+            {
+              ROS_INFO("Steering Factor: %f", steering_factor_);
+            }
+            else
+            {
+              ROS_WARN("Missing required Steering Factor parameter, using default value");
+            }
 
-            if (!private_nh.getParam("steering_factor", steering_factor_)!=false) {
-                ROS_WARN("Missing required Steering Factor parameter, using default value");
+            if (private_nh.getParam("d", d_))
+            {
+              ROS_INFO("Distance Between Wheels Parameter: %f", d_);
             }
-            if (!private_nh.getParam("d", d_)) {
-                ROS_WARN("Missing required Distance Between Wheels parameter, using default value");
+            else
+            {
+              ROS_WARN("Missing required Distance Between Wheels parameter, using default value");
             }
-            
-            if (!private_nh.getParam("b", b_)) {
-                ROS_ERROR("Missing required Real Wheel Baseline parameter, using default value");
+
+            if (private_nh.getParam("b", b_))
+            {
+              ROS_INFO("Wheel Baseline Parameter: %f", b_);
+            }
+            else
+            {
+              ROS_WARN("Missing required Wheel Baseline Parameter, using default value");
             }
             // Subscribe to "/speedsteer" topic 
             speedsteer_sub_ = nh_.subscribe("/speedsteer", 1, &OdomPubSub::speedsteerCallback,this);
