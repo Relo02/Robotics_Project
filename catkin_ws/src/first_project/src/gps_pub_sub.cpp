@@ -49,6 +49,11 @@ class GPS_pub_sub {
         // Timer for periodic tasks
         double prev_time = 0.0;
 
+        // Global reference positions
+        double X_r;
+        double Y_r;
+        double Z_r;
+
     public:
         // Constructor: sets up subscribers, publisher, and timer
         GPS_pub_sub() {
@@ -74,6 +79,27 @@ class GPS_pub_sub {
                 ROS_WARN("Global parameter not found, using default value");
             }
 
+            // Calling the global reference X
+            if (nh_.getParam("/X_r", X_r)) {
+                ROS_INFO("Global parameter: %f", X_r);
+            } else {
+                ROS_WARN("Global parameter not found, using default value");
+            }
+
+            // Calling the global reference Y
+            if (nh_.getParam("/Y_r", Y_r)) {
+                ROS_INFO("Global parameter: %f", Y_r);
+            } else {
+                ROS_WARN("Global parameter not found, using default value");
+            }
+
+            // Calling the global reference altitude
+            if (nh_.getParam("/Z_r", Z_r)) {
+                ROS_INFO("Global parameter: %f", Z_r);
+            } else {
+                ROS_WARN("Global parameter not found, using default value");
+            }
+
             // Subscribe to topics with a queue size of 1
             gps_pos_sub = nh_.subscribe("/swiftnav/front/gps_pose", 1, &GPS_pub_sub::gps_poseCallback, this);
 
@@ -87,7 +113,8 @@ class GPS_pub_sub {
         // Callback function for the "/swiftnav/front/gps_pose" topic
         void gps_poseCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
             gps_poseMSG_ = *msg;
-
+            
+            ROS_INFO("Reference Latitude,Longitude,Altitude: %f %f %f", reference_latitude, reference_longitude, reference_altitude);
             // Process the odometry message here
 
             double curr_time = ros::Time::now().toSec();
@@ -97,6 +124,7 @@ class GPS_pub_sub {
             double lat = gps_poseMSG_.latitude * M_PI / 180.0;
             double lon = gps_poseMSG_.longitude * M_PI / 180.0;
             double alt = gps_poseMSG_.altitude * 0.001; // Convert from mm to m
+            ROS_INFO("GPS Position: %f %f %f", lat, lon, alt);
             double a = 6378137; // WGS-84 semi-major axis
             double b = 6356752;
             double e2 = 1 - b*b / (a*a); // Square of eccentricity
@@ -105,11 +133,13 @@ class GPS_pub_sub {
             ecef_position(1) = (N + alt) * cos(lat) * sin(lon);
             ecef_position(2) = (N * (1 - e2) + alt) * sin(lat);
 
+            ROS_INFO("ECEF Position: %f %f %f", ecef_position(0), ecef_position(1), ecef_position(2));
+
             // ##Converting gps data from ECEF to ENU
             double lat_ref = reference_latitude * M_PI / 180.0;
             double lon_ref = reference_longitude * M_PI / 180.0;
             double alt_ref = reference_altitude * 0.001; // Convert from mm to m
-            Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(lat_ref, lon_ref, alt_ref);
+            Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(X_r, Y_r, Z_r);
             /*double dlat = lat - lat_ref;
             double dlon = lon - lon_ref;
             double dalt = alt - alt_ref;*/
@@ -119,7 +149,9 @@ class GPS_pub_sub {
             R << -sin(lon_ref), cos(lon_ref), 0,
                  -sin(lat_ref) * cos(lon_ref), -sin(lat_ref) * sin(lon_ref), cos(lat_ref),
                  cos(lat_ref) * cos(lon_ref), cos(lat_ref) * sin(lon_ref), sin(lat_ref);
-            
+                 
+            ROS_INFO("Rotation Matrix: %f %f %f", R(0,0), R(0,1), R(0,2));
+            ROS_INFO("references: %f %f %f", lat_ref, lon_ref, alt_ref);
             enu_position = R * (ecef_position - ecef_ref_position);
 
             // Estimating the heading angle
@@ -137,6 +169,7 @@ class GPS_pub_sub {
             odom.pose.pose.position.x = enu_position(0);
             odom.pose.pose.position.y = enu_position(1);
             odom.pose.pose.position.z = enu_position(2);
+            ROS_INFO("ENU Position: %f %f %f", enu_position(0), enu_position(1), enu_position(2));
             odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(heading_angle);
 
             // computing the velocity

@@ -14,6 +14,10 @@
     <param name="lat_r" value="45.618932386592405" />
     <param name="lon_r" value="9.281178887031235" />
     <param name="alt_r" value="229.04906147731415" />
+    <!-- Starting ECEF Coordiantes -->
+    <param name="X_r" value="4409204.869589" />
+    <param name="Y_r" value="721788.001807" />
+    <param name="Z_r" value="4536504.058037" />
 
     <!-- Odometer private parameters-->
     <node pkg="first_project" type = "odom_pub_sub" name="odom_pub_sub" output="screen">
