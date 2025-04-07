@@ -98,13 +98,23 @@ class OdomPubSub {
             a = speedsteerMSG_.point.x;
             V = speedsteerMSG_.point.y;
             current_time = speedsteerMSG_.header.stamp;
+            //current_time = ros::Time::now();
 
 
             //Compute steering angle
             alpha = a*steering_factor_* M_PI / 180.0;
-
+            ROS_INFO("Steering Angle: %f", alpha);
+          
             //Compute delta Time
-            dT = (current_time-last_time).toSec();
+            dT = (current_time.toSec()-last_time.toSec());
+
+            if (dT <= 0) {
+              dT = 0.01; // Set a small positive value to avoid division by zero
+          }
+          else{
+            
+          }
+
 
             //ROS_INFO("Delta Time: %f", dT);
 
@@ -112,28 +122,30 @@ class OdomPubSub {
             ome = (V/3.6)*(tan(alpha)/d_);
             V_f = (ome*d_)/sin(alpha);
             R = d_/tan(alpha);
-            // ROS_INFO("Vf: %f", V_f);
-            // ROS_INFO("Omega: %f", ome);
+            ROS_INFO("Vf: %f", V_f);
+            ROS_INFO("Omega: %f", ome);
             //Compute x,y,theta
             //Compute new x,y,theta
-            if (ome>-0.1 && ome<0.1){
+            if (fabs(ome) < 1e-3){
                 // call runge kutta approximation if w is near zero
                 thetak_1 = thetak+ome*dT;
-                xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
-                yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
+                // xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
+                // yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
+                xk_1 = xk+V_f*dT*cos(thetak);
+                yk_1 = yk+V_f*dT*sin(thetak);
                 // ROS_INFO("Runge x: %f", xk_1);
                 // ROS_INFO("Runge y: %f", yk_1);
             }
             else{
                 thetak_1 = thetak+ome*dT;
-                xk_1 = xk+V_f/ome*(sin(thetak_1)-sin(thetak));
-                yk_1 = yk-V_f/ome*(cos(thetak_1)-cos(thetak));
+                xk_1 = xk+(V_f/ome)*(sin(thetak_1)-sin(thetak));
+                yk_1 = yk-(V_f/ome)*(cos(thetak_1)-cos(thetak));
                 // ROS_INFO("Non Runge x: %f", xk_1);
                 // ROS_INFO("Non Runge y: %f", yk_1);
             }
 
             //Publish x,y,theta on "/odom" topic 
-            odomMSG_.header.stamp = current_time;
+            odomMSG_.header.stamp = ros::Time::now();
             odomMSG_.header.frame_id = "odom";
             odomMSG_.child_frame_id = "vehicle";
             odomMSG_.pose.pose.position.x = xk_1;
@@ -155,7 +167,7 @@ class OdomPubSub {
             q_.setRPY(0,0, thetak_1);
             transform_.setRotation(q_);
             // Publish the updated transform
-            br_.sendTransform(tf::StampedTransform(transform_, current_time, "odom", "vehicle"));
+            br_.sendTransform(tf::StampedTransform(transform_, current_time, "vehicle", "odom"));
 
             //last = current loop
             last_time = current_time;
