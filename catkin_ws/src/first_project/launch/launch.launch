@@ -17,7 +17,7 @@
 
     <!-- Odometer private parameters-->
     <node pkg="first_project" type = "odom_pub_sub" name="odom_pub_sub" output="screen">
-        <!-- Steering Factor Parameter -->
+        <!-- Private Parameters -->
         <param name="steering_factor" value = "32"/>
         <param name="d" value = "1.765" />
         <param name="b" value = "1.3" />

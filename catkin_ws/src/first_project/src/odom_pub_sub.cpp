@@ -79,8 +79,11 @@ class OdomPubSub {
             {
               ROS_WARN("Missing required Wheel Baseline Parameter, using default value");
             }
+
             // Subscribe to "/speedsteer" topic 
             speedsteer_sub_ = nh_.subscribe("/speedsteer", 1, &OdomPubSub::speedsteerCallback,this);
+            //ROS_INFO("Subscriber count on /speedsteer: %d", speedsteer_sub_.getNumPublishers());
+            
 
             // Advertise the publisher on "/odom" topic
             odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/odom", 10);
@@ -96,28 +99,37 @@ class OdomPubSub {
             V = speedsteerMSG_.point.y;
             current_time = speedsteerMSG_.header.stamp;
 
+
             //Compute steering angle
             alpha = a*steering_factor_* M_PI / 180.0;
 
             //Compute delta Time
             dT = (current_time-last_time).toSec();
 
+            //ROS_INFO("Delta Time: %f", dT);
+
             //Compute omega, Vf, R
-            ome = (V*1000/3600)*(tan(alpha)/d_);
+            ome = (V/3.6)*(tan(alpha)/d_);
             V_f = (ome*d_)/sin(alpha);
             R = d_/tan(alpha);
-
+            // ROS_INFO("Vf: %f", V_f);
+            // ROS_INFO("Omega: %f", ome);
+            //Compute x,y,theta
             //Compute new x,y,theta
-            if (ome<-0.1 && ome<0.1){
+            if (ome>-0.1 && ome<0.1){
                 // call runge kutta approximation if w is near zero
                 thetak_1 = thetak+ome*dT;
                 xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
                 yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
+                // ROS_INFO("Runge x: %f", xk_1);
+                // ROS_INFO("Runge y: %f", yk_1);
             }
             else{
                 thetak_1 = thetak+ome*dT;
                 xk_1 = xk+V_f/ome*(sin(thetak_1)-sin(thetak));
                 yk_1 = yk-V_f/ome*(cos(thetak_1)-cos(thetak));
+                // ROS_INFO("Non Runge x: %f", xk_1);
+                // ROS_INFO("Non Runge y: %f", yk_1);
             }
 
             //Publish x,y,theta on "/odom" topic 
@@ -127,9 +139,14 @@ class OdomPubSub {
             odomMSG_.pose.pose.position.x = xk_1;
             odomMSG_.pose.pose.position.y = yk_1;
             odomMSG_.pose.pose.position.z = 0.0;
+            odomMSG_.twist.twist.angular.z = ome;
+
+            // ROS_INFO("x: %f", xk_1);
+            // ROS_INFO("y: %f", yk_1);
+            // ROS_INFO("theta: %f", thetak_1);
             //Adding velocity and omega optionally 
             // odomMSG_.twist.twist.linear.x = V_f;
-            // odomMSG_.twist.twist.angular.z = ome;
+            
             odom_pub_.publish(odomMSG_); 
 
             //Update the transform's origin with the new pose
