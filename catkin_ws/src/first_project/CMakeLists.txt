@@ -43,12 +43,12 @@ target_link_libraries(odometer
  ${catkin_LIBRARIES}
 )
 
-# add_executable(gps_odometer src/gps_pub_sub.cpp)
-# add_dependencies(gps_odometer ${PROJECT_NAME}_gencfg)
+add_executable(gps_odometer src/gps_pub_sub.cpp)
+add_dependencies(gps_odometer ${PROJECT_NAME}_gencfg)
 
-# target_link_libraries(gps_odometer
-#  ${catkin_LIBRARIES}
-# )
+target_link_libraries(gps_odometer
+  ${catkin_LIBRARIES}
+)
 
 add_executable(sector_time src/sector_time_pub_sub.cpp)
 

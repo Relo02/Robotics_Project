@@ -55,21 +55,21 @@ class GPS_pub_sub {
 
             // Calling the global reference latitude
             if (nh_.getParam("/lat_r", reference_latitude)) {
-                ROS_INFO("Global parameter: %d", reference_latitude);
+                ROS_INFO("Global parameter: %f", reference_latitude);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
             }
 
             // Calling the global reference longitude
             if (nh_.getParam("/lon_r", reference_longitude)) {
-                ROS_INFO("Global parameter: %d", reference_longitude);
+                ROS_INFO("Global parameter: %f", reference_longitude);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
             }
 
             // Calling the global reference altitude
             if (nh_.getParam("/alt_r", reference_altitude)) {
-                ROS_INFO("Global parameter: %d", reference_altitude);
+                ROS_INFO("Global parameter: %f", reference_altitude);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
             }
@@ -78,7 +78,7 @@ class GPS_pub_sub {
             gps_pos_sub = nh_.subscribe("/swiftnav/front/gps_pose", 1, &GPS_pub_sub::gps_poseCallback, this);
 
             // Advertise the publisher on "nav_msgs/Odometry" topic
-            odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/gps_odom", 1, &GPS_pub_sub::gps_odomCallback, this);
+            odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/gps_odom", 1);
 
             // Create a timer that triggers every 1 second to publish messages
             //timer_ = nh_.createTimer(ros::Duration(1.0), &PubSubNode::timerCallback, this);
@@ -87,10 +87,7 @@ class GPS_pub_sub {
         // Callback function for the "/swiftnav/front/gps_pose" topic
         void gps_poseCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
             gps_poseMSG_ = *msg;
-        }
 
-        // Callback function for the "nav_msgs/Odometry" topic
-        void gps_odomCallback(const nav_msgs::Odometry::ConstPtr& msg) {
             // Process the odometry message here
 
             double curr_time = ros::Time::now().toSec();
@@ -100,7 +97,7 @@ class GPS_pub_sub {
             double lat = gps_poseMSG_.latitude * M_PI / 180.0;
             double lon = gps_poseMSG_.longitude * M_PI / 180.0;
             double alt = gps_poseMSG_.altitude * 0.001; // Convert from mm to m
-            double a = 6378137.0; // WGS-84 semi-major axis
+            double a = 6378137; // WGS-84 semi-major axis
             double b = 6356752;
             double e2 = 1 - b*b / (a*a); // Square of eccentricity
             double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
@@ -130,7 +127,7 @@ class GPS_pub_sub {
             heading_angle = atan2(denu_position(1), denu_position(0));
 
             // Smoothing the heading angle
-            smoothing_algorithm();
+            //smoothing_algorithm();
 
             // Publish the odometry message
             nav_msgs::Odometry odom;
@@ -163,7 +160,7 @@ class GPS_pub_sub {
 
             // Publish the tf transform from gps odometry to gps frame
             transform.setOrigin(tf::Vector3(enu_position(0), enu_position(1), enu_position(2)));
-            q.setRPY(0, 0, 0); // Assuming no rotation for simplicity
+            q.setRPY(0, 0, 0); // TODO: add the yaw rotation in q.setRPY()
             transform.setRotation(q);
             br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "gps", "gps_odom"));
 
@@ -174,7 +171,6 @@ class GPS_pub_sub {
         }
 
         void smoothing_algorithm() {
-
             // Implementing a moving avarage
             // to smooth the GPS data before publishing
             enu_position = alpha * prev_filtered_value + (1 - alpha) * enu_position;
