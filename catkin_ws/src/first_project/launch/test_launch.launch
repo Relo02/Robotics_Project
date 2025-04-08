@@ -1,0 +1,13 @@
+<launch>
+
+    <!-- Publisher nodes -->
+    <node pkg="first_project" type="gps_odometer" name="gps_odometer" output="screen" />
+
+    <!-- GPS world Reference frame global parameters (starting coordinates) -->
+    <param name="lat_r" value="45.618932386592405" />
+    <param name="lon_r" value="9.281178887031235" />
+    <param name="alt_r" value="229.04906147731415" />
+ 
+    <!-- Start RViz with preloaded configuration -->
+    <node pkg="rviz" type="rviz" name="rviz" args="-d $(find first_project)/config/RVIZ_CONFIG.rviz"/>
+</launch>

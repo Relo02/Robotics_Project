@@ -54,40 +54,24 @@ class GPS_pub_sub {
         double Y_r;
         double Z_r;
 
+        double lat_ref;
+        double lon_ref;
+        double alt_ref;
+
+        double a = 6378137; // WGS-84 semi-major axis
+        double b = 6356752;
+        double e2 = 1 - b*b / (a*a); // Square of eccentricity
+
+        Eigen::Vector3d ecef_ref_position;
+
     public:
         // Constructor: sets up subscribers, publisher, and timer
         GPS_pub_sub() {
 
-            // Calling the global reference latitude
-            if (nh_.getParam("/lat_r", reference_latitude)) {
-                ROS_INFO("Global parameter: %f", reference_latitude);
-            } else {
-                ROS_WARN("Global parameter not found, using default value");
-            }
-
-            // Calling the global reference longitude
-            if (nh_.getParam("/lon_r", reference_longitude)) {
-                ROS_INFO("Global parameter: %f", reference_longitude);
-            } else {
-                ROS_WARN("Global parameter not found, using default value");
-            }
-
-            // Calling the global reference altitude
-            if (nh_.getParam("/alt_r", reference_altitude)) {
-                ROS_INFO("Global parameter: %f", reference_altitude);
-            } else {
-                ROS_WARN("Global parameter not found, using default value");
-            }
-
-            // Calling the global reference X
-            if (nh_.getParam("/X_r", X_r)) {
-                ROS_INFO("Global parameter: %f", X_r);
-            } else {
-                ROS_WARN("Global parameter not found, using default value");
-            }
+            get_reference_position();
 
             // Calling the global reference Y
-            if (nh_.getParam("/Y_r", Y_r)) {
+            /*if (nh_.getParam("/Y_r", Y_r)) {
                 ROS_INFO("Global parameter: %f", Y_r);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
@@ -98,24 +82,24 @@ class GPS_pub_sub {
                 ROS_INFO("Global parameter: %f", Z_r);
             } else {
                 ROS_WARN("Global parameter not found, using default value");
-            }
+            }*/
 
             // Subscribe to topics with a queue size of 1
             gps_pos_sub = nh_.subscribe("/swiftnav/front/gps_pose", 1, &GPS_pub_sub::gps_poseCallback, this);
 
             // Advertise the publisher on "nav_msgs/Odometry" topic
             odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/gps_odom", 1);
-
-            // Create a timer that triggers every 1 second to publish messages
-            //timer_ = nh_.createTimer(ros::Duration(1.0), &PubSubNode::timerCallback, this);
         }
 
         // Callback function for the "/swiftnav/front/gps_pose" topic
         void gps_poseCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
             gps_poseMSG_ = *msg;
+<<<<<<< Updated upstream
             
             //ROS_INFO("Reference Latitude,Longitude,Altitude: %f %f %f", reference_latitude, reference_longitude, reference_altitude);
             // Process the odometry message here
+=======
+>>>>>>> Stashed changes
 
             double curr_time = ros::Time::now().toSec();
 
@@ -124,10 +108,14 @@ class GPS_pub_sub {
             double lat = gps_poseMSG_.latitude * M_PI / 180.0;
             double lon = gps_poseMSG_.longitude * M_PI / 180.0;
             double alt = gps_poseMSG_.altitude * 0.001; // Convert from mm to m
+<<<<<<< Updated upstream
             //ROS_INFO("GPS Position: %f %f %f", lat, lon, alt);
             double a = 6378137; // WGS-84 semi-major axis
             double b = 6356752;
             double e2 = 1 - b*b / (a*a); // Square of eccentricity
+=======
+            ROS_INFO("GPS Position: %f %f %f", lat, lon, alt);
+>>>>>>> Stashed changes
             double N = a / sqrt(1 - e2 * sin(lat) * sin(lat));
             ecef_position(0) = (N + alt) * cos(lat) * cos(lon);
             ecef_position(1) = (N + alt) * cos(lat) * sin(lon);
@@ -136,10 +124,7 @@ class GPS_pub_sub {
             //ROS_INFO("ECEF Position: %f %f %f", ecef_position(0), ecef_position(1), ecef_position(2));
 
             // ##Converting gps data from ECEF to ENU
-            double lat_ref = reference_latitude * M_PI / 180.0;
-            double lon_ref = reference_longitude * M_PI / 180.0;
-            double alt_ref = reference_altitude * 0.001; // Convert from mm to m
-            Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(X_r, Y_r, Z_r);
+            //Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(X_r, Y_r, Z_r);
             /*double dlat = lat - lat_ref;
             double dlon = lon - lon_ref;
             double dalt = alt - alt_ref;*/
@@ -164,8 +149,8 @@ class GPS_pub_sub {
             // Publish the odometry message
             nav_msgs::Odometry odom;
             odom.header.stamp = ros::Time::now();
-            odom.header.frame_id = "gps";
-            odom.child_frame_id = "gps_odom";
+            odom.header.frame_id = "gps_odom";
+            odom.child_frame_id = "gps";
             odom.pose.pose.position.x = enu_position(0);
             odom.pose.pose.position.y = enu_position(1);
             odom.pose.pose.position.z = enu_position(2);
@@ -193,9 +178,9 @@ class GPS_pub_sub {
 
             // Publish the tf transform from gps odometry to gps frame
             transform.setOrigin(tf::Vector3(enu_position(0), enu_position(1), enu_position(2)));
-            q.setRPY(0, 0, 0); // TODO: add the yaw rotation in q.setRPY()
+            q.setRPY(0, 0, heading_angle);
             transform.setRotation(q);
-            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "gps", "gps_odom"));
+            br.sendTransform(tf::StampedTransform(transform, ros::Time::now(), "gps_odom", "gps"));
 
             prev_enu_position = enu_position;
             prev_time = curr_time;
@@ -209,10 +194,44 @@ class GPS_pub_sub {
             enu_position = alpha * prev_filtered_value + (1 - alpha) * enu_position;
             heading_angle = alpha * prev_heading_angle + (1 - alpha) * heading_angle;
         }
+
+        void get_reference_position() {
+            // Get the reference position from the parameter server
+            if (nh_.getParam("/lat_r", reference_latitude)) {
+                ROS_INFO("Global parameter: %f", reference_latitude);
+            } else {
+                ROS_WARN("Global parameter not found, using default value");
+            }
+
+            if (nh_.getParam("/lon_r", reference_longitude)) {
+                ROS_INFO("Global parameter: %f", reference_longitude);
+            } else {
+                ROS_WARN("Global parameter not found, using default value");
+            }
+
+            if (nh_.getParam("/alt_r", reference_altitude)) {
+                ROS_INFO("Global parameter: %f", reference_altitude);
+            } else {
+                ROS_WARN("Global parameter not found, using default value");
+            }
+
+            // Convert reference latitude, longitude, and altitude to radians and meters
+            lat_ref = reference_latitude * M_PI / 180.0;
+            lon_ref = reference_longitude * M_PI / 180.0;
+            alt_ref = reference_altitude * 0.001; // Convert from mm to m
+            double N_ref = a / sqrt(1 - e2 * sin(lat_ref) * sin(lat_ref));
+            ecef_ref_position(0) = (N_ref + alt_ref) * cos(lat_ref) * cos(lon_ref);
+            ecef_ref_position(1) = (N_ref + alt_ref) * cos(lat_ref) * sin(lon_ref);
+            ecef_ref_position(2) = (N_ref * (1 - e2) + alt_ref) * sin(lat_ref);
+            ROS_INFO("ECEF Reference Position: %f %f %f", ecef_ref_position(0), ecef_ref_position(1), ecef_ref_position(2));
+            ROS_INFO("Reference Latitude,Longitude,Altitude: %f %f %f", reference_latitude, reference_longitude, reference_altitude);
+        }
 };
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "gps_odometer"); // Initialize the ROS node with the name "gps_odometer" 
+    //GPS_pub_sub gps_data; // Call the function to get the reference latitude, longitude, and altitude
+    //gps_data.get_reference_position(); // Create an instance of the GPS_pub_sub class
     GPS_pub_sub gps_odometry; 
     ros::spin(); // Keep the node running and processing callbacks
     return 0;
