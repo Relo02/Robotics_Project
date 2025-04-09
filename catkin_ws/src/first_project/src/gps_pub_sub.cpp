@@ -81,7 +81,8 @@ class GPS_pub_sub {
         void gps_poseCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
             gps_poseMSG_ = *msg;
 
-            double curr_time = ros::Time::now().toSec();
+            //double curr_time = ros::Time::now().toSec();
+            double curr_time = gps_poseMSG_.header.stamp.toSec();
 
             // Converting gps data from LLA to ECEF
             Eigen::Vector3d ecef_position;
@@ -124,7 +125,7 @@ class GPS_pub_sub {
 
             // Publish the odometry message
             nav_msgs::Odometry odom;
-            odom.header.stamp = ros::Time::now();
+            odom.header.stamp = gps_poseMSG_.header.stamp;
             odom.header.frame_id = "gps_odom";
             odom.child_frame_id = "gps";
             odom.pose.pose.position.x = enu_position(0);
