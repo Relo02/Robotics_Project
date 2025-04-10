@@ -159,8 +159,8 @@ class OdomPubSub {
             odomMSG_.header.stamp = ros::Time::now();
             odomMSG_.header.frame_id = "odom";
             odomMSG_.child_frame_id = "vehicle";
-            odomMSG_.pose.pose.position.x = xk_1; //Convert to km
-            odomMSG_.pose.pose.position.y = yk_1; //Convert to km 
+            odomMSG_.pose.pose.position.x = xk_1; 
+            odomMSG_.pose.pose.position.y = yk_1; 
             odomMSG_.pose.pose.position.z = 0.0;
             odomMSG_.twist.twist.angular.z = ome;
 
@@ -173,7 +173,7 @@ class OdomPubSub {
             odom_pub_.publish(odomMSG_); 
 
             //Update the transform's origin with the new pose
-            transform_.setOrigin(tf::Vector3(xk_1, yk_1, 0.0));
+            transform_.setOrigin(tf::Vector3(xk_1, -yk_1, 0.0));
             //Transform to Vehicle frame via tf
             q_.setRPY(0,0, thetak_1);
             transform_.setRotation(q_);
