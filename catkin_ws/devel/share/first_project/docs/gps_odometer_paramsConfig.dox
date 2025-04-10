@@ -1,0 +1,8 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~lat_r" : \b [double] Relative Latitude(degrees) min: -10000.0, default: 0.0, max: 10000.0
+- \b "~lon_r" : \b [double] Relative Longitude(degrees) min: -10000.0, default: 0.0, max: 10000.0
+- \b "~alt_r" : \b [double] Relative Altitude(meters) min: -100.0, default: 0.0, max: 100.0
+

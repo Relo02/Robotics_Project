@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(first_project)
 
+
+
+
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
@@ -12,18 +15,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   sensor_msgs
   dynamic_reconfigure
-  message_filters
-  message_generation
 )
 
-add_message_files(
-  FILES
-  Custom.msg
-)
-
-generate_messages(
-  DEPENDENCIES
-)
 # Declare parameter configuration files
 generate_dynamic_reconfigure_options(
   config/gps_odometer_params.cfg
@@ -34,7 +27,7 @@ generate_dynamic_reconfigure_options(
 catkin_package(
   #INCLUDE_DIRS include
   #LIBRARIES first_project
-  #CATKIN_DEPENDS message_runtime 
+  #CATKIN_DEPENDS roscpp nav_msgs geometry_msgs tf
 )
 
 # Include directories
@@ -58,9 +51,10 @@ target_link_libraries(gps_odometer
 )
 
 add_executable(sector_time src/sector_time_pub_sub.cpp)
-add_dependencies(sector_time custom_messages_generate_messages_cpp)
-target_link_libraries(sector_time 
+
+target_link_libraries(sector_time
   ${catkin_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 # Install the executables

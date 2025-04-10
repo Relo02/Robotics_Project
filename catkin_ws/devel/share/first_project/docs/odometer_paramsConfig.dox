@@ -1,0 +1,8 @@
+\subsubsection parameters ROS parameters
+
+Reads and maintains the following parameters on the ROS server
+
+- \b "~steering_factor" : \b [double] Steering Factor min: 31.0, default: 32.0, max: 33.0
+- \b "~d" : \b [double] Distance From Wheels(meters) min: 1.764, default: 1.765, max: 1.766
+- \b "~b" : \b [double] Rear Wheel Baseline(meters) min: 1.29, default: 1.3, max: 1.31
+

@@ -1,0 +1,9 @@
+\subsubsection usage Usage
+\verbatim
+<node name="gps_odometer" pkg="first_project" type="gps_odometer">
+  <param name="lat_r" type="double" value="0.0" />
+  <param name="lon_r" type="double" value="0.0" />
+  <param name="alt_r" type="double" value="0.0" />
+</node>
+\endverbatim
+
