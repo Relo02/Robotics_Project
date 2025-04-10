@@ -49,6 +49,10 @@ class OdomPubSub {
         double yk_1; // Current y position 
         double thetak; //Last theta value
         double thetak_1; // Current theta value 
+        double xk_1_filt; // Current x position after filtering
+        double yk_1_filt; // Current y position after filtering
+        double xk_1_filt_prev = 0.0; // Current x position after filtering
+        double yk_1_filt_prev = 0.0; // Current y position after filtering
     public:
         // Constructor: sets up subscriber and publishers
         OdomPubSub() : nh_(), private_nh("~"){
@@ -99,11 +103,18 @@ class OdomPubSub {
             V = speedsteerMSG_.point.y;
             current_time = speedsteerMSG_.header.stamp;
             //current_time = ros::Time::now();
+            // ROS_INFO("Steering Factor: %f", steering_factor_);
+            // ROS_INFO("Distance Between Wheels: %f", d_);    
+            // ROS_INFO("Wheel Baseline: %f", b_);
+            // ROS_INFO("Speed: %f", V);
+            // ROS_INFO("Steer: %f", a);
 
 
             //Compute steering angle
-            alpha = a*steering_factor_* M_PI / 180.0;
-            ROS_INFO("Steering Angle: %f", alpha);
+            //alpha = steering_factor_/a* M_PI / 180.0;
+            alpha = a* M_PI / 180.0/32.0; 
+        
+            // ROS_INFO("Steering Angle(deg): %f", alpha);
           
             //Compute delta Time
             dT = (current_time.toSec()-last_time.toSec());
@@ -111,45 +122,45 @@ class OdomPubSub {
             if (dT <= 0) {
               dT = 0.01; // Set a small positive value to avoid division by zero
           }
-          else{
-            
-          }
 
 
             //ROS_INFO("Delta Time: %f", dT);
 
             //Compute omega, Vf, R
             ome = (V/3.6)*(tan(alpha)/d_);
+            //V_f = V/3.6;
             V_f = (ome*d_)/sin(alpha);
-            R = d_/tan(alpha);
-            ROS_INFO("Vf: %f", V_f);
-            ROS_INFO("Omega: %f", ome);
+            //R = d_/tan(alpha);
+            //V_f = V_f*3.6; //Convert to km/h
+            // ROS_INFO("Vf: %f", V_f);
+            // ROS_INFO("Omega: %f", ome);
             //Compute x,y,theta
             //Compute new x,y,theta
-            if (fabs(ome) < 1e-3){
+            if (fabs(ome) < 1e-6){
                 // call runge kutta approximation if w is near zero
                 thetak_1 = thetak+ome*dT;
-                // xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
-                // yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
-                xk_1 = xk+V_f*dT*cos(thetak);
-                yk_1 = yk+V_f*dT*sin(thetak);
-                // ROS_INFO("Runge x: %f", xk_1);
-                // ROS_INFO("Runge y: %f", yk_1);
+                xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
+                yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
+                //ROS_INFO("Runge x: %f", xk_1);
+                //ROS_INFO("Runge y: %f", yk_1);
             }
             else{
                 thetak_1 = thetak+ome*dT;
                 xk_1 = xk+(V_f/ome)*(sin(thetak_1)-sin(thetak));
                 yk_1 = yk-(V_f/ome)*(cos(thetak_1)-cos(thetak));
-                // ROS_INFO("Non Runge x: %f", xk_1);
-                // ROS_INFO("Non Runge y: %f", yk_1);
+                //ROS_INFO("Non Runge x: %f", xk_1);
+                //ROS_INFO("Non Runge y: %f", yk_1);
             }
+
+            // Smoothing algorithm
+            //smoothing_algorithm();
 
             //Publish x,y,theta on "/odom" topic 
             odomMSG_.header.stamp = ros::Time::now();
             odomMSG_.header.frame_id = "odom";
             odomMSG_.child_frame_id = "vehicle";
-            odomMSG_.pose.pose.position.x = xk_1;
-            odomMSG_.pose.pose.position.y = yk_1;
+            odomMSG_.pose.pose.position.x = xk_1; 
+            odomMSG_.pose.pose.position.y = yk_1; 
             odomMSG_.pose.pose.position.z = 0.0;
             odomMSG_.twist.twist.angular.z = ome;
 
@@ -162,7 +173,7 @@ class OdomPubSub {
             odom_pub_.publish(odomMSG_); 
 
             //Update the transform's origin with the new pose
-            transform_.setOrigin(tf::Vector3(xk_1, yk_1, 0.0));
+            transform_.setOrigin(tf::Vector3(xk_1, -yk_1, 0.0));
             //Transform to Vehicle frame via tf
             q_.setRPY(0,0, thetak_1);
             transform_.setRotation(q_);
@@ -174,7 +185,17 @@ class OdomPubSub {
             thetak = thetak_1;
             xk = xk_1;
             yk = yk_1;
+
+            // xk_1_filt_prev = xk_1_filt;
+            // yk_1_filt_prev = yk_1_filt;
+            
         }
+
+        // void smoothing_algorithm() {
+        //     // to smooth the GPS data before publishing
+        //     xk_1_filt = .6* xk_1_filt_prev + (1 - .6) * xk_1;
+        //     yk_1_filt= .6 * yk_1_filt_prev + (1 - .6) * yk_1;
+        // }
 
 
 };
