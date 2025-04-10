@@ -50,9 +50,9 @@ class GPS_pub_sub {
         double prev_time = 0.0;
 
         // Global reference positions
-        double X_r;
+        /*double X_r;
         double Y_r;
-        double Z_r;
+        double Z_r;*/
 
         double lat_ref;
         double lon_ref;
@@ -118,7 +118,7 @@ class GPS_pub_sub {
 
             // Estimating the heading angle
             denu_position = enu_position - prev_enu_position;
-            heading_angle = atan2(denu_position(1), denu_position(0));
+            heading_angle = atan2(denu_position(0), denu_position(1));
 
             // Smoothing the heading angle
             //smoothing_algorithm();
