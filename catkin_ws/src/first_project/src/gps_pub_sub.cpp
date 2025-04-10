@@ -98,7 +98,7 @@ class GPS_pub_sub {
             ecef_position(1) = (N + alt) * cos(lat) * sin(lon);
             ecef_position(2) = (N * (1 - e2) + alt) * sin(lat);
 
-            ROS_INFO("ECEF Position: %f %f %f", ecef_position(0), ecef_position(1), ecef_position(2));
+            //ROS_INFO("ECEF Position: %f %f %f", ecef_position(0), ecef_position(1), ecef_position(2));
 
             // ##Converting gps data from ECEF to ENU
             //Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(X_r, Y_r, Z_r);
@@ -112,8 +112,8 @@ class GPS_pub_sub {
                  -sin(lat_ref) * cos(lon_ref), -sin(lat_ref) * sin(lon_ref), cos(lat_ref),
                  cos(lat_ref) * cos(lon_ref), cos(lat_ref) * sin(lon_ref), sin(lat_ref);
                  
-            ROS_INFO("Rotation Matrix: %f %f %f", R(0,0), R(0,1), R(0,2));
-            ROS_INFO("references: %f %f %f", lat_ref, lon_ref, alt_ref);
+            //OS_INFO("Rotation Matrix: %f %f %f", R(0,0), R(0,1), R(0,2));
+            //ROS_INFO("references: %f %f %f", lat_ref, lon_ref, alt_ref);
             enu_position = R * (ecef_position - ecef_ref_position);
 
             // Estimating the heading angle
@@ -131,7 +131,7 @@ class GPS_pub_sub {
             odom.pose.pose.position.x = enu_position(0);
             odom.pose.pose.position.y = enu_position(1);
             odom.pose.pose.position.z = enu_position(2);
-            ROS_INFO("ENU Position: %f %f %f", enu_position(0), enu_position(1), enu_position(2));
+            //ROS_INFO("ENU Position: %f %f %f", enu_position(0), enu_position(1), enu_position(2));
             odom.pose.pose.orientation = tf::createQuaternionMsgFromYaw(heading_angle);
 
             // computing the velocity
@@ -200,8 +200,8 @@ class GPS_pub_sub {
             ecef_ref_position(0) = (N_ref + alt_ref) * cos(lat_ref) * cos(lon_ref);
             ecef_ref_position(1) = (N_ref + alt_ref) * cos(lat_ref) * sin(lon_ref);
             ecef_ref_position(2) = (N_ref * (1 - e2) + alt_ref) * sin(lat_ref);
-            ROS_INFO("ECEF Reference Position: %f %f %f", ecef_ref_position(0), ecef_ref_position(1), ecef_ref_position(2));
-            ROS_INFO("Reference Latitude,Longitude,Altitude: %f %f %f", reference_latitude, reference_longitude, reference_altitude);
+            //ROS_INFO("ECEF Reference Position: %f %f %f", ecef_ref_position(0), ecef_ref_position(1), ecef_ref_position(2));
+            //ROS_INFO("Reference Latitude,Longitude,Altitude: %f %f %f", reference_latitude, reference_longitude, reference_altitude);
         }
 };
 
