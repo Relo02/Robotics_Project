@@ -1,0 +1,8 @@
+prefix=/home/robotics/catkin_ws/install
+
+Name: first_project
+Description: Description of first_project
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: 
