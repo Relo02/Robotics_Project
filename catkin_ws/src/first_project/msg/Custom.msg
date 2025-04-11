@@ -1,3 +1,4 @@
+std_msgs/Header header
 int64 current_sector
 float64 current_sector_time
 float64 current_sector_mean_speed

@@ -14,6 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   message_filters
   message_generation
+  std_msgs
 )
 
 add_message_files(
@@ -23,6 +24,7 @@ add_message_files(
 
 generate_messages(
   DEPENDENCIES
+  std_msgs
 )
 # Declare parameter configuration files
 generate_dynamic_reconfigure_options(

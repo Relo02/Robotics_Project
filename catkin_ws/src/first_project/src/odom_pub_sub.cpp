@@ -53,7 +53,7 @@ class OdomPubSub {
         double yk_1_filt; // Current y position after filtering
         double xk_1_filt_prev = 0.0; // Current x position after filtering
         double yk_1_filt_prev = 0.0; // Current y position after 
-        double a_bias = 0.0; 
+        double a_bias = 0.0; // Bias for steering angle
         // double a_bias = 0.0; // Bias for steering angle
         // double total_a = 0.0; // Total steering angle
         // int count = 0; // Counter for steering bias computation 
@@ -115,7 +115,7 @@ class OdomPubSub {
 
             //Compute steering angle
             //alpha = steering_factor_/a* M_PI / 180.0;
-            alpha = a* M_PI / 180.0/32.0; 
+            alpha = ((a* M_PI / 180.0)-a_bias)/32.0; 
         
             // ROS_INFO("Steering Angle(deg): %f", alpha);
           
