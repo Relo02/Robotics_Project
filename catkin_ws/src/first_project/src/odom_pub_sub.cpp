@@ -52,7 +52,11 @@ class OdomPubSub {
         double xk_1_filt; // Current x position after filtering
         double yk_1_filt; // Current y position after filtering
         double xk_1_filt_prev = 0.0; // Current x position after filtering
-        double yk_1_filt_prev = 0.0; // Current y position after filtering
+        double yk_1_filt_prev = 0.0; // Current y position after 
+        double a_bias = 0.0; 
+        // double a_bias = 0.0; // Bias for steering angle
+        // double total_a = 0.0; // Total steering angle
+        // int count = 0; // Counter for steering bias computation 
     public:
         // Constructor: sets up subscriber and publishers
         OdomPubSub() : nh_(), private_nh("~"){
@@ -100,14 +104,13 @@ class OdomPubSub {
             speedsteerMSG_ = *msg;
             //Extract speed, steer input,and time from msg
             a = speedsteerMSG_.point.x;
+            //a  a_bias + a_bias;
             V = speedsteerMSG_.point.y;
             current_time = speedsteerMSG_.header.stamp;
-            //current_time = ros::Time::now();
-            // ROS_INFO("Steering Factor: %f", steering_factor_);
-            // ROS_INFO("Distance Between Wheels: %f", d_);    
-            // ROS_INFO("Wheel Baseline: %f", b_);
-            // ROS_INFO("Speed: %f", V);
-            // ROS_INFO("Steer: %f", a);
+            // count++;
+            // total_a += a;
+            // a_bias = total_a/count;     
+            ROS_INFO("Steering Angle : %f", a);
 
 
             //Compute steering angle
@@ -160,12 +163,12 @@ class OdomPubSub {
             odomMSG_.header.frame_id = "odom";
             odomMSG_.child_frame_id = "vehicle";
             odomMSG_.pose.pose.position.x = xk_1; 
-            odomMSG_.pose.pose.position.y = yk_1; 
+            odomMSG_.pose.pose.position.y = -yk_1; 
             odomMSG_.pose.pose.position.z = 0.0;
             odomMSG_.twist.twist.angular.z = ome;
 
-            // ROS_INFO("x: %f", xk_1);
-            // ROS_INFO("y: %f", yk_1);
+            ROS_INFO("x: %f", xk_1);
+            ROS_INFO("y: %f", yk_1);
             // ROS_INFO("theta: %f", thetak_1);
             //Adding velocity and omega optionally 
             // odomMSG_.twist.twist.linear.x = V_f;
