@@ -110,7 +110,7 @@ class OdomPubSub {
             // count++;
             // total_a += a;
             // a_bias = total_a/count;     
-            ROS_INFO("Steering Angle : %f", a);
+            //ROS_INFO("Steering Angle : %f", a);
 
 
             //Compute steering angle
@@ -167,8 +167,8 @@ class OdomPubSub {
             odomMSG_.pose.pose.position.z = 0.0;
             odomMSG_.twist.twist.angular.z = ome;
 
-            ROS_INFO("x: %f", xk_1);
-            ROS_INFO("y: %f", yk_1);
+            //ROS_INFO("x: %f", xk_1);
+            //ROS_INFO("y: %f", yk_1);
             // ROS_INFO("theta: %f", thetak_1);
             //Adding velocity and omega optionally 
             // odomMSG_.twist.twist.linear.x = V_f;
