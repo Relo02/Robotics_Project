@@ -30,7 +30,7 @@ class SectorTimePubSub {
       message_filters::Synchronizer<SyncPolicy> sync_;
 
       //Sector Flag initilization 
-      int sector_flag = 1; // 1: sector1, 2: sector2, 3: sector3
+      int sector_flag = 0; // 1: sector1, 2: sector2, 3: sector3
 
       //Declare Message Variables
       double speed; 
@@ -66,7 +66,7 @@ class SectorTimePubSub {
       //Declare time variables
       //double sectorstart_time = 0.0;
       double curr_time;
-      double sector_time;
+      double sector_time = 0.0;
       double totalsector_time_1 = 0.0;
       double totalsector_time_2 = 0.0;
       double totalsector_time_3 = 0.0;
@@ -114,11 +114,15 @@ class SectorTimePubSub {
           sector_flag = 1;
           sector_time = 0.0;
         }
+        else if (compareLLA(current_LLA, starting_LLA) && sector_flag != 1) {
+          sector_flag = 1;
+          sector_time = 0.0;
+        }
       }
 
       void Callback(const sensor_msgs::NavSatFix::ConstPtr& gps_msg, const geometry_msgs::PointStamped::ConstPtr& speed_msg ){
         // Extract the speed and steer input from the message
-        speed = speed_msg->point.x; // Speed in km/h
+        speed = speed_msg->point.y; // Speed in km/h
         
         // Extract the GPS data
         latitude = gps_msg->latitude;
