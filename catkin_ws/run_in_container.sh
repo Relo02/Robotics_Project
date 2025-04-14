@@ -1,7 +1,4 @@
-# Start roscore
-roscore &
-
-sleep 2
+#!/bin/bash
 
 # Optional: launch your odometry node or other necessary nodes
 roslaunch first_project launch.launch &
@@ -19,8 +16,6 @@ sleep 2
 # Start rosbag playback 
 rosbag play --clock ../data/project.bag &
 echo "Playing back project.bag..."
-# Optional: wait for a few seconds to ensure playback starts
-sleep 2
 
 # Optional: wait for user to press [ENTER] to stop
 read -p "Press ENTER to stop recording..."
