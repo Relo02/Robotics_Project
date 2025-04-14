@@ -67,7 +67,7 @@ class SectorTimePubSub {
       //Declare time variables
       //double sectorstart_time = 0.0;
       double curr_time;
-      double sector_time;
+      double sector_time = 0.0;
       double totalsector_time_1 = 0.0;
       double totalsector_time_2 = 0.0;
       double totalsector_time_3 = 0.0;
@@ -117,6 +117,10 @@ class SectorTimePubSub {
           sector_time = partial_sector_time_1;
         }
         else if (compareLLA(current_LLA, starting_LLA) && sector_flag != 1 && sector_flag != 3) {
+          sector_flag = 1;
+          sector_time = 0.0;
+        }
+        else if (compareLLA(current_LLA, starting_LLA) && sector_flag != 1) {
           sector_flag = 1;
           sector_time = 0.0;
         }
