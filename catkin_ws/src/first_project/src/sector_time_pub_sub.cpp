@@ -96,27 +96,33 @@ class SectorTimePubSub {
         return trunc(value * factor) / factor;
       }
 
-      bool compareLLA(double a[3], double b[3], double epsilon = 0.005) {
+      bool compareLLA_sectors_1_2(double a[3], double b[3], double epsilon = 0.005) {
+        return (fabs(a[0] - b[0]) < epsilon &&
+                fabs(a[1] - b[1]) < epsilon &&
+                fabs(a[2] - b[2]) < epsilon);
+      }
+
+      bool compareLLA_sector_3(double a[3], double b[3], double epsilon = 0.0005) {
         return (fabs(a[0] - b[0]) < epsilon &&
                 fabs(a[1] - b[1]) < epsilon &&
                 fabs(a[2] - b[2]) < epsilon);
       }
 
       void get_sector_times_flags() {
-        if (compareLLA(current_LLA, sector_2_LLA) && sector_flag != 2) {
+        if (compareLLA_sectors_1_2(current_LLA, sector_2_LLA) && sector_flag != 2) {
           sector_flag = 2;
           partial_sector_time_1 = sector_time;
           sector_time = 0.0;
         }
-        else if (compareLLA(current_LLA, sector_3_LLA) && sector_flag != 3) {
+        else if (compareLLA_sectors_1_2(current_LLA, sector_3_LLA) && sector_flag != 3) {
           sector_flag = 3;
           sector_time = 0.0;
         }
-        else if (compareLLA(current_LLA, sector_1_LLA) && sector_flag != 1) {
+        else if (compareLLA_sector_3(current_LLA, sector_1_LLA) && sector_flag != 1) {
           sector_flag = 1;
           sector_time = partial_sector_time_1;
         }
-        else if (compareLLA(current_LLA, starting_LLA) && sector_flag != 1 && sector_flag != 3) {
+        else if (compareLLA_sectors_1_2(current_LLA, starting_LLA) && sector_flag != 1 && sector_flag != 3) {
           sector_flag = 1;
           sector_time = 0.0;
         }
