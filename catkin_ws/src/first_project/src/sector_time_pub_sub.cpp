@@ -30,7 +30,7 @@ class SectorTimePubSub {
       message_filters::Synchronizer<SyncPolicy> sync_;
 
       //Sector Flag initilization 
-      int sector_flag = 1; // 1: sector1, 2: sector2, 3: sector3
+      int sector_flag = 0; // 1: sector1, 2: sector2, 3: sector3
 
       //Declare Message Variables
       double speed; 
@@ -47,6 +47,7 @@ class SectorTimePubSub {
 
       // Declaring sector times list
       double sector_times[3] = {0.0, 0.0, 0.0}; 
+      double partial_sector_time_1 = 0.0; // Variable to store the time spent in sector 1 before entering sector 2, to be added to sector 1 time when returning to it in the last part of the lap
 
       // Declaring starting times for each sector -> Values retrived from the GPS in project.bag file
       double sector_1_start_time = 382.25; 
@@ -104,6 +105,7 @@ class SectorTimePubSub {
       void get_sector_times_flags() {
         if (compareLLA(current_LLA, sector_2_LLA) && sector_flag != 2) {
           sector_flag = 2;
+          partial_sector_time_1 = sector_time;
           sector_time = 0.0;
         }
         else if (compareLLA(current_LLA, sector_3_LLA) && sector_flag != 3) {
@@ -112,13 +114,17 @@ class SectorTimePubSub {
         }
         else if (compareLLA(current_LLA, sector_1_LLA) && sector_flag != 1) {
           sector_flag = 1;
+          sector_time = partial_sector_time_1;
+        }
+        else if (compareLLA(current_LLA, starting_LLA) && sector_flag != 1 && sector_flag != 3) {
+          sector_flag = 1;
           sector_time = 0.0;
         }
       }
 
       void Callback(const sensor_msgs::NavSatFix::ConstPtr& gps_msg, const geometry_msgs::PointStamped::ConstPtr& speed_msg ){
         // Extract the speed and steer input from the message
-        speed = speed_msg->point.x; // Speed in km/h
+        speed = speed_msg->point.y; // Speed in km/h
         
         // Extract the GPS data
         latitude = gps_msg->latitude;
