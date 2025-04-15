@@ -17,7 +17,7 @@ echo "Recording started..."
 sleep 2
 
 # Start rosbag playback 
-rosbag play --clock ../data/project.bag &
+rosbag play --clock -r 3.0 ../data/project.bag & 
 echo "Playing back project.bag..."
 # Optional: wait for a few seconds to ensure playback starts
 sleep 2

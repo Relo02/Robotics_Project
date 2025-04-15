@@ -39,9 +39,9 @@ class SectorTimePubSub {
       const double starting_LLA[3] = {45.61893238659240, 9.281178887031235, 229.04906147731415}; // Replace with actual LLA values
 
       // Declare variables for the sector time
-      int counter_1 = 0;
-      int counter_2 = 0;
-      int counter_3 = 0;
+      int counter_1;
+      int counter_2;
+      int counter_3;
 
 
       double totalspeed_1 = 0.0;
@@ -71,17 +71,6 @@ class SectorTimePubSub {
       double meanspeed_1 = 0.0;
       double meanspeed_2 = 0.0;
       double meanspeed_3 = 0.0;
-
-      //Truncate factor
-      double factor = std::pow(10.0, 3);
-      double lat;
-
-
- 
-      
-
-
-      
 
   public:
       // Constructor: sets up subscribers, publisher, and timer
@@ -147,8 +136,8 @@ class SectorTimePubSub {
         //     sectorstart_time = 1350862497278.7195;
         //     ROS_WARN("Still Default");
         // }
-        ROS_INFO("Current Time: %f", curr_time.toSec());
-        ROS_INFO("Start Sector Time: %f", sectorstart_time.toSec());
+        //ROS_INFO("Current Time: %f", curr_time.toSec());
+        //ROS_INFO("Start Sector Time: %f", sectorstart_time.toSec());
 
         
         

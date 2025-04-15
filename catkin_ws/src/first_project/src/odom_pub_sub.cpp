@@ -53,10 +53,7 @@ class OdomPubSub {
         double yk_1_filt; // Current y position after filtering
         double xk_1_filt_prev = 0.0; // Current x position after filtering
         double yk_1_filt_prev = 0.0; // Current y position after 
-        double a_bias = 0.0; // Bias for steering angle
-        // double a_bias = 0.0; // Bias for steering angle
-        // double total_a = 0.0; // Total steering angle
-        // int count = 0; // Counter for steering bias computation 
+
     public:
         // Constructor: sets up subscriber and publishers
         OdomPubSub() : nh_(), private_nh("~"){
@@ -104,30 +101,31 @@ class OdomPubSub {
             speedsteerMSG_ = *msg;
             //Extract speed, steer input,and time from msg
             a = speedsteerMSG_.point.x;
-            //a  a_bias + a_bias;
             V = speedsteerMSG_.point.y;
+            a = a - 6.6; // Offset value to get the correct steering angle
             current_time = speedsteerMSG_.header.stamp;
-            // count++;
-            // total_a += a;
-            // a_bias = total_a/count;     
             //ROS_INFO("Steering Angle : %f", a);
 
 
             //Compute steering angle
             //alpha = steering_factor_/a* M_PI / 180.0;
-            alpha = ((a* M_PI / 180.0)-a_bias)/32.0; 
+            alpha = ((a* M_PI / 180.0))/32.0; 
         
-            // ROS_INFO("Steering Angle(deg): %f", alpha);
+            ROS_INFO("Steering Angle(deg): %f", alpha);
           
             //Compute delta Time
             dT = (current_time.toSec()-last_time.toSec());
 
             if (dT <= 0) {
-              dT = 0.01; // Set a small positive value to avoid division by zero
+              dT = fabs(dT); // Set a small positive value to avoid division by zero
           }
 
 
             //ROS_INFO("Delta Time: %f", dT);
+            if (fabs(alpha)<=1e-3){
+              //ROS_WARN("Steering Angle is too small");
+              alpha = 1e-3;
+            }
 
             //Compute omega, Vf, R
             ome = (V/3.6)*(tan(alpha)/d_);
@@ -135,11 +133,11 @@ class OdomPubSub {
             V_f = (ome*d_)/sin(alpha);
             //R = d_/tan(alpha);
             //V_f = V_f*3.6; //Convert to km/h
-            // ROS_INFO("Vf: %f", V_f);
-            // ROS_INFO("Omega: %f", ome);
+            //ROS_INFO("Vf: %f", V_f);
+            //ROS_INFO("Omega: %f", ome);
             //Compute x,y,theta
             //Compute new x,y,theta
-            if (fabs(ome) < 1e-6){
+            if (fabs(ome) <= 1e-6){
                 // call runge kutta approximation if w is near zero
                 thetak_1 = thetak+ome*dT;
                 xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
@@ -155,8 +153,6 @@ class OdomPubSub {
                 //ROS_INFO("Non Runge y: %f", yk_1);
             }
 
-            // Smoothing algorithm
-            //smoothing_algorithm();
 
             //Publish x,y,theta on "/odom" topic 
             odomMSG_.header.stamp = ros::Time::now();
@@ -167,11 +163,8 @@ class OdomPubSub {
             odomMSG_.pose.pose.position.z = 0.0;
             odomMSG_.twist.twist.angular.z = ome;
 
-            //ROS_INFO("x: %f", xk_1);
-            //ROS_INFO("y: %f", yk_1);
-            // ROS_INFO("theta: %f", thetak_1);
-            //Adding velocity and omega optionally 
-            // odomMSG_.twist.twist.linear.x = V_f;
+            ROS_INFO("x: %f", xk_1);
+            ROS_INFO("y: %f", yk_1);
             
             odom_pub_.publish(odomMSG_); 
 
@@ -193,14 +186,6 @@ class OdomPubSub {
             // yk_1_filt_prev = yk_1_filt;
             
         }
-
-        // void smoothing_algorithm() {
-        //     // to smooth the GPS data before publishing
-        //     xk_1_filt = .6* xk_1_filt_prev + (1 - .6) * xk_1;
-        //     yk_1_filt= .6 * yk_1_filt_prev + (1 - .6) * yk_1;
-        // }
-
-
 };
 
 int main(int argc, char **argv) {
