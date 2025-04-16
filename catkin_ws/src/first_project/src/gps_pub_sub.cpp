@@ -44,7 +44,7 @@ class GPS_pub_sub {
         // Previous filtered value for smoothing
         Eigen::Vector3d prev_filtered_value = Eigen::Vector3d::Zero();
         double prev_heading_angle = 0.0;
-        double alpha = 0.1; // Smoothing factor (0 < alpha < 1)
+        double alpha = 0.7; // Smoothing factor (0 < alpha < 1)
 
         // Timer for periodic tasks
         double prev_time = 0.0;
@@ -121,7 +121,7 @@ class GPS_pub_sub {
             heading_angle = atan2(denu_position(0), denu_position(1));
 
             // Smoothing the heading angle
-            //smoothing_algorithm();
+            smoothing_algorithm();
 
             // Publish the odometry message
             nav_msgs::Odometry odom;
@@ -168,7 +168,6 @@ class GPS_pub_sub {
         void smoothing_algorithm() {
             // Implementing a moving avarage
             // to smooth the GPS data before publishing
-            enu_position = alpha * prev_filtered_value + (1 - alpha) * enu_position;
             heading_angle = alpha * prev_heading_angle + (1 - alpha) * heading_angle;
         }
 
