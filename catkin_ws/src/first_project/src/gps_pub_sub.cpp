@@ -44,7 +44,7 @@ class GPS_pub_sub {
         // Previous filtered value for smoothing
         Eigen::Vector3d prev_filtered_value = Eigen::Vector3d::Zero();
         double prev_heading_angle = 0.0;
-        double alpha = 0.7; // Smoothing factor (0 < alpha < 1)
+        double alpha; // Smoothing factor (0 < alpha < 1)
 
         // Timer for periodic tasks
         double prev_time = 0.0;
@@ -64,6 +64,15 @@ class GPS_pub_sub {
 
         Eigen::Vector3d ecef_ref_position;
 
+        int counter = 0;
+        double mean_gps_angle = 0;
+        bool collecting_heading = true;
+        double start_time;
+        double sum = 0;
+        double smooth_angle;
+        double speed;
+
+
     public:
         // Constructor: sets up subscribers, publisher, and timer
         GPS_pub_sub() {
@@ -77,12 +86,20 @@ class GPS_pub_sub {
             odom_pub_ = nh_.advertise<nav_msgs::Odometry>("/gps_odom", 1);
         }
 
+        double clamp(double val, double min_val, double max_val) {
+            return std::max(min_val, std::min(val, max_val));
+        }
+
         // Callback function for the "/swiftnav/front/gps_pose" topic
         void gps_poseCallback(const sensor_msgs::NavSatFix::ConstPtr& msg) {
             gps_poseMSG_ = *msg;
 
             //double curr_time = ros::Time::now().toSec();
             double curr_time = gps_poseMSG_.header.stamp.toSec();
+
+            if (counter == 0) 
+                start_time = gps_poseMSG_.header.stamp.toSec(); // getting the start time 
+            counter++;
 
             // Converting gps data from LLA to ECEF
             Eigen::Vector3d ecef_position;
@@ -118,10 +135,36 @@ class GPS_pub_sub {
 
             // Estimating the heading angle
             denu_position = enu_position - prev_enu_position;
-            heading_angle = atan2(denu_position(0), denu_position(1));
 
-            // Smoothing the heading angle
-            smoothing_algorithm();
+            // computing the absolute speed along (x, y)
+            // checking if dt is not zero
+            if (curr_time - prev_time > 0) 
+                speed = sqrt(pow(denu_position(0), 2) + pow(denu_position(1), 2)) / (curr_time - prev_time);
+
+            if (speed > 0.3) {
+                heading_angle = atan2(denu_position(0), denu_position(1));
+                alpha = clamp(1.0 - speed, 0.5, 0.9); // adjust alpha based on speed -> it computes the speed and sets alpha to a value between 0.5 and 0.9
+                smoothing_algorithm();
+                ROS_INFO("Smooth angle when the car is moving: %f", smooth_angle * 180 / M_PI);
+                prev_heading_angle = smooth_angle;
+            } else {
+                // If the speed is low, we can use the previous heading angle
+                heading_angle = prev_heading_angle;
+                smooth_angle = heading_angle;
+                ROS_INFO("Smooth angle when the car is not moving: %f", smooth_angle * 180 / M_PI);
+            }
+
+            /*if (curr_time - start_time < ros::Duration(14.0).toSec()) {
+                alpha = 0.8;  // Smoothing the measurements when the vehicle is not moving ->
+                // in this case we are settung a higher alpha such that the smoothing relies more on the previous filtered values
+                smoothing_algorithm();
+                ROS_INFO("Smooth angle when the car is not moving: %f", smooth_angle * 180 / M_PI);
+            } else {
+                // Smoothing the heading angle
+                alpha = 0.5;  // Smoothing the measurements when the vehicle is moving
+                smoothing_algorithm();
+                ROS_INFO("Smooth angle when the car is moving: %f", smooth_angle * 180 / M_PI);
+            }*/
 
             // Publish the odometry message
             nav_msgs::Odometry odom;
@@ -162,13 +205,11 @@ class GPS_pub_sub {
             prev_enu_position = enu_position;
             prev_time = curr_time;
             prev_filtered_value = enu_position;
-            prev_heading_angle = heading_angle;
         }
 
         void smoothing_algorithm() {
-            // Implementing a moving avarage
-            // to smooth the GPS data before publishing
-            heading_angle = alpha * prev_heading_angle + (1 - alpha) * heading_angle;
+            // Implementing a lpf in order to smooth the GPS data before publishing
+            smooth_angle = alpha * prev_heading_angle + (1 - alpha) * heading_angle;
         }
 
         void get_reference_position() {
