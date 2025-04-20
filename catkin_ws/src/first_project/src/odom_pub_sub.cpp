@@ -110,7 +110,7 @@ class OdomPubSub {
             // count++;
             // total_a += a;
             // a_bias = total_a/count;     
-            ROS_INFO("Steering Angle : %f", a);
+            //ROS_INFO("Steering Angle : %f", a);
 
           
 
@@ -167,13 +167,13 @@ class OdomPubSub {
             odomMSG_.header.stamp = ros::Time::now();
             odomMSG_.header.frame_id = "odom";
             odomMSG_.child_frame_id = "vehicle";
-            odomMSG_.pose.pose.position.x = xk_1; 
-            odomMSG_.pose.pose.position.y = yk_1; 
+            odomMSG_.pose.pose.position.x = -yk_1; 
+            odomMSG_.pose.pose.position.y = xk_1; 
             odomMSG_.pose.pose.position.z = 0.0;
             odomMSG_.twist.twist.angular.z = ome;
 
-            ROS_INFO("x: %f", xk_1);
-            ROS_INFO("y: %f", yk_1);
+            //ROS_INFO("x: %f", xk_1);
+            //ROS_INFO("y: %f", yk_1);
             // ROS_INFO("theta: %f", thetak_1);
             //Adding velocity and omega optionally 
             // odomMSG_.twist.twist.linear.x = V_f;
@@ -181,7 +181,7 @@ class OdomPubSub {
             odom_pub_.publish(odomMSG_); 
 
             //Update the transform's origin with the new pose
-            transform_.setOrigin(tf::Vector3(xk_1, yk_1, 0.0));
+            transform_.setOrigin(tf::Vector3(-yk_1, xk_1, 0.0));
             //Transform to Vehicle frame via tf
             q_.setRPY(0,0, thetak_1);
             transform_.setRotation(q_);
