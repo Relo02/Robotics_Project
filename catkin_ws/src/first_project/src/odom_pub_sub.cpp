@@ -53,7 +53,7 @@ class OdomPubSub {
         double yk_1_filt; // Current y position after filtering
         double xk_1_filt_prev = 0.0; // Current x position after filtering
         double yk_1_filt_prev = 0.0; // Current y position after 
-        double a_bias = 0.0; // Bias for steering angle
+        double a_bias = -7.2 * M_PI / 180; // Bias for steering angle
         // double a_bias = 0.0; // Bias for steering angle
         // double total_a = 0.0; // Total steering angle
         // int count = 0; // Counter for steering bias computation 
@@ -147,15 +147,15 @@ class OdomPubSub {
             if (fabs(ome) < 1e-6){
                 // call runge kutta approximation if w is near zero
                 thetak_1 = thetak+ome*dT;
-                xk_1 = xk+V_f*dT*cos(thetak+(ome*dT)/2);
-                yk_1 = yk+V_f*dT*sin(thetak+(ome*dT)/2);
+                yk_1 = yk+V_f*dT*cos(thetak+(ome*dT)/2);
+                xk_1 = xk+V_f*dT*sin(thetak+(ome*dT)/2);
                 //ROS_INFO("Runge x: %f", xk_1);
                 //ROS_INFO("Runge y: %f", yk_1);
             }
             else{
                 thetak_1 = thetak+ome*dT;
-                xk_1 = xk+(V_f/ome)*(sin(thetak_1)-sin(thetak));
-                yk_1 = yk-(V_f/ome)*(cos(thetak_1)-cos(thetak));
+                yk_1 = yk+(V_f/ome)*(sin(thetak_1)-sin(thetak));
+                xk_1 = xk-(V_f/ome)*(cos(thetak_1)-cos(thetak));
                 //ROS_INFO("Non Runge x: %f", xk_1);
                 //ROS_INFO("Non Runge y: %f", yk_1);
             }
