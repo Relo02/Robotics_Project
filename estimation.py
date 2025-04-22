@@ -11,7 +11,7 @@ kf = KalmanFilter(
     initial_state=np.zeros(5),
     initial_covariance=np.eye(5) * 0.1,
     process_noise=np.eye(5) * 0.01,  # to be tuned
-    gps_noise=np.eye(2) * 4.0 # to be tuned
+    gps_noise=np.eye(2) * 0.01 # to be tuned
 )
 
 last_time = None
@@ -108,12 +108,12 @@ def run_ekf():
             0,  # Initial velocity
             0   # Initial angular velocity
         ])
-        kf = KalmanFilter(
+        """kf = KalmanFilter(
             initial_state=initial_state,
             initial_covariance=np.eye(5) * 0.1,
-            process_noise=np.eye(5) * 0.01,
-            gps_noise=np.eye(2) * 0.1
-        )
+            process_noise=np.eye(5) * 0.1*5000, # 0.01
+            gps_noise=np.eye(2) * 0.1*50
+        )"""
     except Exception as e:
         print(f"⚠️ Kalman Filter initialization failed: {str(e)}")
         return
@@ -134,9 +134,9 @@ def run_ekf():
         dt = speedsteer_row['Time'] - last_time if last_time is not None else 0.01
         
         try:
-            v = speedsteer_row['point.y'] / 3.6  # km/h to m/s
             steering_angle_deg = speedsteer_row['point.x']
-            alpha = np.radians(steering_angle_deg)
+            alpha = np.clip(np.radians(steering_angle_deg), -1.57, 1.57)
+            v = speedsteer_row['point.y'] / np.cos(alpha) /3.6  # km/h to m/s
             wheelbase = 1.765
             omega = v * np.tan(alpha) / wheelbase
             

@@ -44,7 +44,7 @@ include_directories(include ${catkin_INCLUDE_DIRS}
 )
 
 #Add executable for each node
-add_executable(odometer src/odom_pub_sub.cpp)
+add_executable(odometer src/odom_pub_sub.cpp src/Kalman_filter.cpp)
 add_dependencies(odometer ${PROJECT_NAME}_gencfg)
 
 #Link the executables with the required libraries
