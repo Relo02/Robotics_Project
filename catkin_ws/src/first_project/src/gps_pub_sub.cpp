@@ -48,19 +48,13 @@ class GPS_pub_sub {
 
         // Timer for periodic tasks
         double prev_time = 0.0;
-
-        // Global reference positions
-        /*double X_r;
-        double Y_r;
-        double Z_r;*/
-
         double lat_ref;
         double lon_ref;
         double alt_ref;
 
-        double a = 6378137; // WGS-84 semi-major axis
+        double a = 6378137; 
         double b = 6356752;
-        double e2 = 1 - b*b / (a*a); // Square of eccentricity
+        double e2 = 1 - b*b / (a*a); 
 
         Eigen::Vector3d ecef_ref_position;
 
@@ -115,26 +109,20 @@ class GPS_pub_sub {
             ecef_position(1) = (N + alt) * cos(lat) * sin(lon);
             ecef_position(2) = (N * (1 - e2) + alt) * sin(lat);
 
-            //ROS_INFO("ECEF Position: %f %f %f", ecef_position(0), ecef_position(1), ecef_position(2));
-
-            // ##Converting gps data from ECEF to ENU
-            //Eigen::Vector3d ecef_ref_position = Eigen::Vector3d(X_r, Y_r, Z_r);
-            /*double dlat = lat - lat_ref;
-            double dlon = lon - lon_ref;
-            double dalt = alt - alt_ref;*/
-
             // Calculate the ENU coordinates
             Eigen::Matrix3d R;
             R << -sin(lon_ref), cos(lon_ref), 0,
                  -sin(lat_ref) * cos(lon_ref), -sin(lat_ref) * sin(lon_ref), cos(lat_ref),
                  cos(lat_ref) * cos(lon_ref), cos(lat_ref) * sin(lon_ref), sin(lat_ref);
                  
-            //OS_INFO("Rotation Matrix: %f %f %f", R(0,0), R(0,1), R(0,2));
-            //ROS_INFO("references: %f %f %f", lat_ref, lon_ref, alt_ref);
             enu_position = R * (ecef_position - ecef_ref_position);
 
-            // Estimating the heading angle
-            denu_position = enu_position - prev_enu_position;
+            if (enu_position(0) == -1028663.637769047 && enu_position(1) == -4477422.006266854) { // x = -1028663.637769047, y = -4477422.006266854 are the positions of the vehicle when is located inside the tunnel
+                enu_position(0) = prev_enu_position(0) + denu_position(0);
+                enu_position(1) = prev_enu_position(1) + denu_position(1);
+            } else if (enu_position(0) != -1028663.637769047 && enu_position(1) != -4477422.006266854) {
+                denu_position = enu_position - prev_enu_position;
+            }
 
             // computing the absolute speed along (x, y)
             // checking if dt is not zero
@@ -143,28 +131,16 @@ class GPS_pub_sub {
 
             if (speed > 0.3) {
                 heading_angle = atan2(denu_position(0), denu_position(1));
-                alpha = clamp(1.0 - speed, 0.5, 0.9); // adjust alpha based on speed -> it computes the speed and sets alpha to a value between 0.5 and 0.9
+                alpha = clamp(1.0 - speed, 0.5, 0.9); // adjust alpha based on the current value of the speed
                 smoothing_algorithm();
                 ROS_INFO("Smooth angle when the car is moving: %f", smooth_angle * 180 / M_PI);
                 prev_heading_angle = smooth_angle;
             } else {
-                // If the speed is low, we can use the previous heading angle
+                // If the speed is low, we just keep the previous heading angle (which is zero when the car is not moving)
                 heading_angle = prev_heading_angle;
                 smooth_angle = heading_angle;
                 ROS_INFO("Smooth angle when the car is not moving: %f", smooth_angle * 180 / M_PI);
             }
-
-            /*if (curr_time - start_time < ros::Duration(14.0).toSec()) {
-                alpha = 0.8;  // Smoothing the measurements when the vehicle is not moving ->
-                // in this case we are settung a higher alpha such that the smoothing relies more on the previous filtered values
-                smoothing_algorithm();
-                ROS_INFO("Smooth angle when the car is not moving: %f", smooth_angle * 180 / M_PI);
-            } else {
-                // Smoothing the heading angle
-                alpha = 0.5;  // Smoothing the measurements when the vehicle is moving
-                smoothing_algorithm();
-                ROS_INFO("Smooth angle when the car is moving: %f", smooth_angle * 180 / M_PI);
-            }*/
 
             // Publish the odometry message
             nav_msgs::Odometry odom;
@@ -240,15 +216,11 @@ class GPS_pub_sub {
             ecef_ref_position(0) = (N_ref + alt_ref) * cos(lat_ref) * cos(lon_ref);
             ecef_ref_position(1) = (N_ref + alt_ref) * cos(lat_ref) * sin(lon_ref);
             ecef_ref_position(2) = (N_ref * (1 - e2) + alt_ref) * sin(lat_ref);
-            //ROS_INFO("ECEF Reference Position: %f %f %f", ecef_ref_position(0), ecef_ref_position(1), ecef_ref_position(2));
-            //ROS_INFO("Reference Latitude,Longitude,Altitude: %f %f %f", reference_latitude, reference_longitude, reference_altitude);
         }
 };
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "gps_odometer"); // Initialize the ROS node with the name "gps_odometer" 
-    //GPS_pub_sub gps_data; // Call the function to get the reference latitude, longitude, and altitude
-    //gps_data.get_reference_position(); // Create an instance of the GPS_pub_sub class
+    ros::init(argc, argv, "gps_odometer"); // Initialize the ROS node with the name "gps_odometer"
     GPS_pub_sub gps_odometry; 
     ros::spin(); // Keep the node running and processing callbacks
     return 0;

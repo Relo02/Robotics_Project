@@ -6,9 +6,9 @@
 class KalmanFilter {
 public:
     KalmanFilter(const Eigen::VectorXd& initial_state,
-                 const Eigen::MatrixXd& initial_covariance,
-                 const Eigen::MatrixXd& process_noise,
-                 const Eigen::MatrixXd& gps_noise);
+                const Eigen::MatrixXd& initial_covariance,
+                const Eigen::MatrixXd& process_noise,
+                const Eigen::MatrixXd& gps_noise);
 
     void predict(double dt, double v, double omega);
     void update(const Eigen::Vector2d& gps_measurement);

@@ -65,6 +65,12 @@ target_link_libraries(sector_time
   ${catkin_LIBRARIES}
 )
 
+add_executable(EKF src/EKF_pub_sub.cpp src/Kalman_filter.cpp)
+
+#Link the executables with the required libraries
+target_link_libraries(EKF
+ ${catkin_LIBRARIES}
+)
 # Install the executables
 #install(TARGETS
 #  odometer

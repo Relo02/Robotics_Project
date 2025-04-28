@@ -1,16 +1,16 @@
 <launch>
 
     <!-- Publisher nodes -->
-    <node pkg="first_project" type="odometer" name="odometer" output="screen">
-        <param name="steering_factor" value="32"/>
-        <param name="d" value="1.765"/>
-        <param name="b" value="1.3"/>
-    </node>
-
+    <node pkg="first_project" type="odometer" name="odometer" output="screen" />
     <node pkg="first_project" type="gps_odometer" name="gps_odometer" output="screen" />
     <node pkg="first_project" type="sector_time" name="sector_time" output="screen" />
+    <node pkg="first_project" type="EKF" name="EKF" output="screen" />
 
  
+    <param name="steering_factor" value="32"/>
+    <param name="d" value="1.765"/>
+    <param name="b" value="1.3"/>
+
     <!-- GPS world Reference frame global parameters (starting coordinates) -->
     <param name="lat_r" value="45.618932386592405" />
     <param name="lon_r" value="9.281178887031235" />
