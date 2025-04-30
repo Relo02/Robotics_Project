@@ -53,7 +53,7 @@ class OdomPubSub {
         double yk_1_filt; // Current y position after filtering
         double xk_1_filt_prev = 0.0; // Current x position after filtering
         double yk_1_filt_prev = 0.0; // Current y position after 
-        double a_bias = 0.0; // Bias for steering angle
+        double a_bias = -7.2 * M_PI / 180 * 0.0; // Bias for steering angle
         // double a_bias = 0.0; // Bias for steering angle
         // double total_a = 0.0; // Total steering angle
         // int count = 0; // Counter for steering bias computation 
@@ -160,15 +160,31 @@ class OdomPubSub {
           odomMSG_.header.stamp = ros::Time::now();
           odomMSG_.header.frame_id = "odom";
           odomMSG_.child_frame_id = "vehicle";
-          odomMSG_.pose.pose.position.x = xk_1; 
-          odomMSG_.pose.pose.position.y = yk_1; 
+          odomMSG_.pose.pose.position.x = -yk_1; 
+          odomMSG_.pose.pose.position.y = xk_1; 
           odomMSG_.pose.pose.position.z = 0.0;
           odomMSG_.twist.twist.angular.z = ome;
           
           odom_pub_.publish(odomMSG_); 
 
+          if (current_time - last_time > 0) {
+            odomMSG_.twist.twist.linear.x = (xk_1 - xk) / (current_time - last_time);
+            odomMSG_.twist.twist.linear.y = (yk_1 - yk) / (current_time - last_time);
+            odomMSG_.twist.twist.linear.z = 0;
+            odomMSG_.twist.twist.angular.x = 0;
+            odomMSG_.twist.twist.angular.y = 0;
+            odom_pub_.publish(odomMSG_);
+          } else {
+            odomMSG_.twist.twist.linear.x = 0;
+            odomMSG_.twist.twist.linear.y = 0;
+            odomMSG_.twist.twist.linear.z = 0;
+            odomMSG_.twist.twist.angular.x = 0;
+            odomMSG_.twist.twist.angular.y = 0;
+            odom_pub_.publish(odomMSG_);
+          }
+
           //Update the transform's origin with the new pose
-          transform_.setOrigin(tf::Vector3(xk_1, yk_1, 0.0));
+          transform_.setOrigin(tf::Vector3(-yk_1, xk_1, 0.0));
           //Transform to Vehicle frame via tf
           q_.setRPY(0,0, thetak_1);
           transform_.setRotation(q_);
