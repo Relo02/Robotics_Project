@@ -167,9 +167,9 @@ class OdomPubSub {
           
           odom_pub_.publish(odomMSG_); 
 
-          if (current_time - last_time > 0) {
-            odomMSG_.twist.twist.linear.x = (xk_1 - xk) / (current_time - last_time);
-            odomMSG_.twist.twist.linear.y = (yk_1 - yk) / (current_time - last_time);
+          if ((current_time - last_time).toSec() > 0) {
+            odomMSG_.twist.twist.linear.x = (xk_1 - xk) / ((current_time - last_time).toSec());
+            odomMSG_.twist.twist.linear.y = (yk_1 - yk) / ((current_time - last_time).toSec());
             odomMSG_.twist.twist.linear.z = 0;
             odomMSG_.twist.twist.angular.x = 0;
             odomMSG_.twist.twist.angular.y = 0;
