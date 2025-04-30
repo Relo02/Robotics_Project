@@ -118,8 +118,9 @@ class GPS_pub_sub {
             enu_position = R * (ecef_position - ecef_ref_position);
 
             if (enu_position(0) == -1028663.637769047 && enu_position(1) == -4477422.006266854) { // x = -1028663.637769047, y = -4477422.006266854 are the positions of the vehicle when is located inside the tunnel
-                enu_position(0) = prev_enu_position(0) + denu_position(0);
-                enu_position(1) = prev_enu_position(1) + denu_position(1);
+                // updating the enu_position with the previous one to avoid the infinity values, weighting the delta value by 0.8 in order to get a better trajectory
+                enu_position(0) = prev_enu_position(0) + denu_position(0)*0.8; 
+                enu_position(1) = prev_enu_position(1) + denu_position(1)*0.8;
             } else if (enu_position(0) != -1028663.637769047 && enu_position(1) != -4477422.006266854) {
                 denu_position = enu_position - prev_enu_position;
             }
@@ -145,7 +146,7 @@ class GPS_pub_sub {
             // Publish the odometry message
             nav_msgs::Odometry odom;
             odom.header.stamp = gps_poseMSG_.header.stamp;
-            odom.header.frame_id = "gps_odom";
+            odom.header.frame_id = "odom";
             odom.child_frame_id = "gps";
             odom.pose.pose.position.x = enu_position(0);
             odom.pose.pose.position.y = enu_position(1);
