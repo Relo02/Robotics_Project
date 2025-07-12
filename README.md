@@ -1,173 +1,122 @@
-# 🚗 Ackermann Steering Model for Odometry and Localization
+# 🚘 Ackermann Steering Model & Bicycle Approximation
 
-This project implements the **Ackermann steering kinematic model** and its **bicycle approximation**, designed for estimating the pose of an autonomous car navigating the Monza F1 circuit. The project was developed using the **ROS 1** environment, with input from encoder and GPS sensors, and includes an **Extended Kalman Filter (EKF)** to fuse sensor data and improve localization accuracy.
+This repository implements and explains the kinematic models used for car-like vehicles, focusing on:
 
-## 📘 Table of Contents
+- The **Ackermann steering geometry**, which models the real behavior of four-wheeled vehicles.
+- Its simplified form, the **bicycle approximation**, suitable for odometry and localization algorithms.
 
-- [Overview](#overview)
-- [Theoretical Background](#theoretical-background)
-  - [Ackermann Steering Geometry](#ackermann-steering-geometry)
-  - [Bicycle Model Approximation](#bicycle-model-approximation)
-- [Mathematical Models](#mathematical-models)
-  - [Non-Holonomic Constraints](#non-holonomic-constraints)
-  - [Kinematic Bicycle Model Equations](#kinematic-bicycle-model-equations)
-- [ROS Implementation](#ros-implementation)
-- [Sensor Fusion with EKF](#sensor-fusion-with-ekf)
-- [Output](#output)
-- [Dependencies](#dependencies)
+The project and this README are based on material presented in the *Robotics Course* by Prof. Matteo Matteucci, Politecnico di Milano.
 
 ---
 
-## 🔍 Overview
+## 📐 Ackermann Steering Model
 
-The goal is to estimate the real-time position (x, y, θ) of an autonomous car using a simplified vehicle model and limited sensor data:
+The **Ackermann steering model** captures the geometry of a vehicle with four wheels, where only the front wheels can steer. The rear wheels are fixed and provide traction.
 
-- **Inputs**:
-  - Wheel encoder data (linear speed and steering angle)
-  - Dual GPS data (front and rear GPS units)
-  
-- **Outputs**:
-  - Odometry estimation in the world frame
-  - GPS-based position transformation to Cartesian frame
-  - EKF-based fusion of odometry and GPS for improved accuracy
+Key characteristics:
+- Wheels have limited turning angles.
+- Vehicle cannot rotate in place.
+- Turning radius is defined by the geometry and steering angles.
 
----
+### 🔧 Geometry
 
-## 📐 Theoretical Background
-
-### Ackermann Steering Geometry
-
-Ackermann steering allows the vehicle to turn without lateral slipping of the tires. The turning radii of the inner and outer wheels differ due to the fixed geometry of the front axle:
-
-**Ackermann Condition:**
+In Ackermann steering, each front wheel must follow a different radius curve:
 
 \[
-\tan(\delta_R) = \frac{L}{R + \frac{W}{2}}, \quad \tan(\delta_L) = \frac{L}{R - \frac{W}{2}}
+\tan(\alpha_L) = \frac{d}{R + b}, \quad \tan(\alpha_R) = \frac{d}{R - b}
 \]
 
 Where:
-- \( \delta_R, \delta_L \) = right and left front wheel steering angles  
-- \( L \) = wheelbase  
-- \( W \) = track width  
-- \( R \) = turning radius of the vehicle's center
+- \( \alpha_L, \alpha_R \) = steering angles for left and right front wheels  
+- \( R \) = turning radius (to the ICR — instantaneous center of rotation)  
+- \( d \) = wheelbase (distance between front and rear axles)  
+- \( b \) = half the track width
 
-This geometry is difficult to model fully in real-time applications, leading to the use of the **bicycle model**.
+Each wheel must rotate about the same **ICC** to avoid slipping, which defines these turning radii.
+
+### 🌀 Angular Velocity
+
+Each wheel contributes to the vehicle’s angular velocity \( \omega \):
+
+\[
+\omega = \frac{V_{FL}}{d \cdot \sin(\alpha_L)} = \frac{V_{FR}}{d \cdot \sin(\alpha_R)}
+\]
 
 ---
 
-### Bicycle Model Approximation
+## 🚲 Bicycle Approximation
 
-The bicycle model simplifies the Ackermann geometry by replacing the two front wheels with a single virtual wheel at the center:
+To simplify computation, the **bicycle model** reduces the four-wheel system into a two-wheel model:
+
+- A single front wheel controls the steering (placed at the midpoint of actual front wheels).
+- A single rear wheel provides propulsion.
+
+This model preserves the essential behavior while being easier to implement in real-time systems like EKFs or path planners.
+
+### 🧮 Kinematic Equations
+
+Let \( \alpha \) be the steering angle of the virtual front wheel, and \( v \) be the linear velocity:
 
 \[
-\tan(\delta) = \frac{L}{R}
+\begin{aligned}
+x_{k+1} &= x_k + v_k T_s \cos(\theta_k) \\
+y_{k+1} &= y_k + v_k T_s \sin(\theta_k) \\
+\theta_{k+1} &= \theta_k + \omega_k T_s \\
+\text{where} \quad \omega_k &= \frac{v_k}{d} \tan(\alpha_k)
+\end{aligned}
 \]
 
 Where:
-- \( \delta \) = steering angle of the virtual front wheel  
-- \( R \) = radius of curvature of the center of mass
+- \( (x, y) \) is the position in global frame  
+- \( \theta \) is the heading angle  
+- \( d \) is the wheelbase  
+- \( T_s \) is the sampling time  
 
-This model captures the essential motion behavior with fewer parameters and less computational overhead, making it ideal for real-time estimation and control.
-
----
-
-## 🧮 Mathematical Models
-
-### Non-Holonomic Constraints
-
-Due to the wheel configuration, the vehicle is subject to non-holonomic constraints (i.e., it cannot move sideways). The instantaneous velocity at the center of mass can be described as:
-
-\[
-\begin{cases}
-\dot{x} = v \cos(\theta) \\
-\dot{y} = v \sin(\theta) \\
-\dot{\theta} = \frac{v}{L} \tan(\delta)
-\end{cases}
-\]
-
-Where:
-- \( v \) = linear speed  
-- \( \theta \) = vehicle orientation  
-- \( x, y \) = position in world frame  
-- \( \delta \) = steering angle  
-- \( L \) = wheelbase
-
-These differential equations describe the **kinematic bicycle model**.
+This is the model used for **dead-reckoning odometry** in real-world applications such as self-driving cars and autonomous racing.
 
 ---
 
-## 🤖 ROS Implementation
+## 📌 Why Use the Bicycle Model?
 
-Two ROS nodes were developed:
-
-### 1. Odometry Node
-
-- Implements the bicycle model equations
-- Publishes predicted pose \((x, y, \theta)\) and velocity
-- Uses encoder inputs (speed, steering angle)
-
-### 2. GPS Odometry Node
-
-- Converts raw GPS coordinates (latitude, longitude, altitude) into Cartesian coordinates in a fixed local frame (e.g., UTM)
-- Publishes GPS position as a `nav_msgs/Odometry` message
+While the Ackermann model reflects true vehicle behavior, it is more complex to model and simulate due to independent front wheel angles. The bicycle model:
+- Approximates real motion with sufficient accuracy
+- Requires fewer parameters and sensors
+- Enables fast computation for control and localization
 
 ---
 
-## 📈 Sensor Fusion with EKF
+## 📷 Visual Reference
 
-An Extended Kalman Filter node was implemented to fuse:
-
-- **Predicted pose** from the odometry node
-- **GPS position** from the GPS odometry node
-
-This fusion helps correct drift due to accumulated error in dead-reckoning and improves accuracy in the presence of sensor noise.
-
-### EKF Correction Step:
-
-\[
-x_t = x_t^- + K_t (z_t - H x_t^-)
-\]
-
-Where:
-- \( x_t^- \) = predicted state
-- \( z_t \) = observed measurement (GPS)
-- \( H \) = observation model
-- \( K_t \) = Kalman gain
+![Ackermann Geometry](docs/ackermann_diagram.png)  
+*Figure: Ackermann steering — wheels turning around a shared ICR*
 
 ---
 
-## ✅ Output
+## 🔧 Applications in This Repository
 
-- `odom_combined`: Corrected odometry published as a `nav_msgs/Odometry` message
-- Visualization in RViz for trajectory evaluation
-- Logging tools for offline comparison between GPS, odometry, and EKF-based pose
+- Odometry estimation using wheel encoder and steering angle
+- Localization through integration over time
+- ROS-compatible implementation
+- Designed for low-slip environments (e.g., asphalt, track)
 
 ---
 
 ## 🧰 Dependencies
 
-- ROS 1 (Noetic recommended)
-- `robot_localization` (for EKF)
-- `gps_common`
-- `geodesy`
-- `tf`, `nav_msgs`, `sensor_msgs`
+- ROS 1 (tested with Noetic)
+- `tf`, `geometry_msgs`, `nav_msgs`
+- C++ or Python (depending on your implementation)
 
 ---
 
-## 📌 References
+## 📩 Contact
 
-- [Robotics: Modelling, Planning and Control – Siciliano et al.]
-- [ROS Navigation Stack]
-- [Ackermann Steering Geometry (Technical Notes)]
-
----
-
-## 📤 Contact
-
-For any questions or collaboration, feel free to reach out to:
-
-**Lorenzo Ortolani**  
+Lorenzo Ortolani  
 📧 [ortolore@gmail.com](mailto:ortolore@gmail.com)  
-🔗 [linkedin.com/in/lorenzo-ortolani](https://www.linkedin.com/in/lorenzo-ortolani-6135b7240/)
+🔗 [linkedin.com/in/lorenzo-ortolani](https://linkedin.com/in/lorenzo-ortolani-6135b7240)
 
+---
+
+> _"All models are wrong, but some are useful."_ – George Box  
+> The bicycle model is one such useful simplification of a very real problem.
 
