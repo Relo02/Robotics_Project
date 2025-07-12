@@ -26,6 +26,8 @@ In Ackermann steering, each front wheel must follow a different radius curve:
 \tan(\alpha_L) = \frac{d}{R + b}, \quad \tan(\alpha_R) = \frac{d}{R - b}
 \]
 
+![formula](https://latex.codecogs.com/svg.latex?\tan(\alpha_L) = \frac{d}{R + b}, \quad \tan(\alpha_R) = \frac{d}{R - b})
+
 Where:
 - \( \alpha_L, \alpha_R \) = steering angles for left and right front wheels  
 - \( R \) = turning radius (to the ICR — instantaneous center of rotation)  
