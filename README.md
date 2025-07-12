@@ -22,11 +22,7 @@ Key characteristics:
 
 In Ackermann steering, each front wheel must follow a different radius curve:
 
-\[
-\tan(\alpha_L) = \frac{d}{R + b}, \quad \tan(\alpha_R) = \frac{d}{R - b}
-\]
-
-![formula](https://latex.codecogs.com/svg.latex?\tan(\alpha_L) = \frac{d}{R + b}, \quad \tan(\alpha_R) = \frac{d}{R - b})
+![Ackermann Geometry](https://latex.codecogs.com/png.image?\dpi{120}&space;\tan(\alpha_L)=\frac{d}{R&plus;b},\quad\tan(\alpha_R)=\frac{d}{R-b})
 
 Where:
 - \( \alpha_L, \alpha_R \) = steering angles for left and right front wheels  
@@ -40,9 +36,7 @@ Each wheel must rotate about the same **ICC** to avoid slipping, which defines t
 
 Each wheel contributes to the vehicle’s angular velocity \( \omega \):
 
-\[
-\omega = \frac{V_{FL}}{d \cdot \sin(\alpha_L)} = \frac{V_{FR}}{d \cdot \sin(\alpha_R)}
-\]
+![Angular Velocity](https://latex.codecogs.com/png.image?\dpi{120}&space;\omega=\frac{V_{FL}}{d\cdot\sin(\alpha_L)}=\frac{V_{FR}}{d\cdot\sin(\alpha_R)})
 
 ---
 
@@ -59,14 +53,12 @@ This model preserves the essential behavior while being easier to implement in r
 
 Let \( \alpha \) be the steering angle of the virtual front wheel, and \( v \) be the linear velocity:
 
-\[
-\begin{aligned}
-x_{k+1} &= x_k + v_k T_s \cos(\theta_k) \\
-y_{k+1} &= y_k + v_k T_s \sin(\theta_k) \\
-\theta_{k+1} &= \theta_k + \omega_k T_s \\
-\text{where} \quad \omega_k &= \frac{v_k}{d} \tan(\alpha_k)
-\end{aligned}
-\]
+![Kinematic Equations](https://latex.codecogs.com/png.image?\dpi{120}&space;\begin{aligned}
+x_{k&plus;1}&=x_k&plus;v_kT_s\cos(\theta_k)\\
+y_{k&plus;1}&=y_k&plus;v_kT_s\sin(\theta_k)\\
+\theta_{k&plus;1}&=\theta_k&plus;\omega_kT_s\\
+\omega_k&=\frac{v_k}{d}\tan(\alpha_k)
+\end{aligned})
 
 Where:
 - \( (x, y) \) is the position in global frame  
@@ -121,4 +113,3 @@ Lorenzo Ortolani
 
 > _"All models are wrong, but some are useful."_ – George Box  
 > The bicycle model is one such useful simplification of a very real problem.
-
